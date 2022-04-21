@@ -12,6 +12,8 @@ import random
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+GOOGLE_API_KEY = "AIzaSyABoNMQEdhfPSZexPLgkglXjXz6nRrqDxU"
+
 # LINE 聊天機器人的基本資料
 config = configparser.ConfigParser()
 config.read(os.path.join(BASE_DIR, 'config.ini'))
@@ -56,6 +58,19 @@ def pretty_echo(event):
             event.reply_token,
             TextSendMessage(text=pretty_text)
         )
+
+@handler.add(MessageEvent, message=LocationMessage)
+def handle_location_message(event):
+    # 獲取使用者的經緯度
+    # lat = event.message.latitude
+    # long = event.message.longitude
+    lat = "25.043830267934887"
+    long = "121.53312232894588"
+
+    # 使用 Google API Start =========
+    # 1. 搜尋附近餐廳
+    nearby_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={}&location={},{}&rankby=distance&type=restaurant&language=zh-TW".format(GOOGLE_API_KEY, lat, long)
+    nearby_results = requests.get(nearby_url)
 
 if __name__ == "__main__":
     app.run()
