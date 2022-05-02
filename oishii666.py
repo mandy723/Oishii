@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import os
+import json
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -69,8 +70,52 @@ def handle_location_message(event):
 
     # 使用 Google API Start =========
     # 1. 搜尋附近餐廳
-    nearby_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={}&location={},{}&rankby=distance&type=restaurant&language=zh-TW".format(GOOGLE_API_KEY, lat, long)
-    nearby_results = requests.get(nearby_url)
+    # nearby_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={}&location={},{}&rankby=distance&type=restaurant&language=zh-TW".format(GOOGLE_API_KEY, lat, long)
+    # nearby_results = requests.get(nearby_url)
+
+    # 隨機選擇一間餐廳
+    f = open('sample_nearby_response.json')
+    # nearby_restaurants_dict = nearby_results.json()
+    nearby_restaurants_dict = json.load(f)
+    f.close()
+    top20_restaurants = nearby_restaurants_dict["results"]
+    restaurant = random.choice(top20_restaurants)
+
+    # 4. 檢查餐廳有沒有照片，有的話會顯示
+    if restaurant.get("photos") is None:
+        thumbnail_image_url = None
+    else:
+        # 根據文件，最多只會有一張照片
+        photo_reference = restaurant["photos"][0]["photo_reference"]
+        thumbnail_image_url = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photo_reference)
+    # 5. 組裝餐廳詳細資訊
+    rating = "無" if restaurant.get("rating") is None else restaurant["rating"]
+    address = "沒有資料" if restaurant.get("vicinity") is None else restaurant["vicinity"]
+    details = "評分：{}\n地址：{}".format(rating, address)
+
+    # 6. 取得餐廳的 Google map 網址
+    map_url = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={place_id}".format(
+        lat=restaurant["geometry"]["location"]["lat"],
+        long=restaurant["geometry"]["location"]["lng"],
+        place_id=restaurant["place_id"]
+    )
+    # 使用 Google API End =========
+
+    # 回覆使用 Buttons Template
+    buttons_template_message = TemplateSendMessage(
+    alt_text=restaurant["name"],
+    template=ButtonsTemplate(
+            thumbnail_image_url=thumbnail_image_url,
+            title=restaurant["name"],
+            text=details,
+            actions=[
+                URITemplateAction(
+                    label='查看地圖',
+                    uri=map_url
+                ),
+            ]
+        )
+    )
 
 if __name__ == "__main__":
     app.run()
