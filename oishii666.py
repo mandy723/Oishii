@@ -9,10 +9,10 @@ from linebot.models import (
     LocationMessage,
     TemplateSendMessage, ButtonsTemplate, URITemplateAction,
 )
-
 import configparser
-
 import random
+import requests
+
 
 app = Flask(__name__)
 
@@ -58,30 +58,54 @@ def pretty_echo(event):
         
             pretty_text += i
             pretty_text += random.choice(pretty_note)
+
+        if event.message.text.lower() == "oishii":
+            buttons_template_message = TemplateSendMessage(
+            alt_text="Please tell me where you are",
+            template=ButtonsTemplate(
+                text="Please tell me where you are",
+                actions=[
+                    URITemplateAction(
+                        label="Send my location",
+                        uri="line://nv/location"
+                        )
+                    ]
+                )
+            )
+
+            line_bot_api.reply_message(
+                event.reply_token,
+                buttons_template_message
+                )
+
+        elif event.message.text.lower() == "隨便吃":
     
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=pretty_text)
-        )
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text=pretty_text)
+            )
+
+        else:
+            text=f'event.reply_token: {event.reply_token}\n' + 'event.source.user_id: {event.source.user_id}' + 'event.message.text: {event.message.text}'
+
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text=text)
+            )
 
 @handler.add(MessageEvent, message=LocationMessage)
 def handle_location_message(event):
     # 獲取使用者的經緯度
-    # lat = event.message.latitude
-    # long = event.message.longitude
-    lat = "25.043830267934887"
-    long = "121.53312232894588"
+    lat = event.message.latitude
+    long = event.message.longitude
 
     # 使用 Google API Start =========
     # 1. 搜尋附近餐廳
-    # nearby_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={}&location={},{}&rankby=distance&type=restaurant&language=zh-TW".format(GOOGLE_API_KEY, lat, long)
-    # nearby_results = requests.get(nearby_url)
+    nearby_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={}&location={},{}&rankby=distance&type=restaurant&language=zh-TW".format(GOOGLE_API_KEY, lat, long)
+    nearby_results = requests.get(nearby_url)
 
     # 隨機選擇一間餐廳
-    f = open('sample_nearby_response.json')
-    # nearby_restaurants_dict = nearby_results.json()
-    nearby_restaurants_dict = json.load(f)
-    f.close()
+    nearby_restaurants_dict = nearby_results.json()
     top20_restaurants = nearby_restaurants_dict["results"]
     restaurant = random.choice(top20_restaurants)
 
