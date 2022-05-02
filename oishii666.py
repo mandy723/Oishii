@@ -48,50 +48,50 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def pretty_echo(event):
     
-    if event.source.user_id != "Udeadbeefdeadbeefdeadbeefdeadbeef":
+    # if event.source.user_id != "Udeadbeefdeadbeefdeadbeefdeadbeef":
         
-        # Phoebe 愛唱歌
-        pretty_note = '♫♪♬'
-        pretty_text = ''
-        
-        for i in event.message.text:
-        
-            pretty_text += i
-            pretty_text += random.choice(pretty_note)
-
-        if event.message.text.lower() == "oishii":
-            buttons_template_message = TemplateSendMessage(
-            alt_text="Please tell me where you are",
-            template=ButtonsTemplate(
-                text="Please tell me where you are",
-                actions=[
-                    URITemplateAction(
-                        label="Send my location",
-                        uri="line://nv/location"
-                        )
-                    ]
-                )
-            )
-
-            line_bot_api.reply_message(
-                event.reply_token,
-                buttons_template_message
-                )
-
-        elif event.message.text.lower() == "隨便吃":
+    # Phoebe 愛唱歌
+    pretty_note = '♫♪♬'
+    pretty_text = ''
     
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text=pretty_text)
+    for i in event.message.text:
+    
+        pretty_text += i
+        pretty_text += random.choice(pretty_note)
+
+    if event.message.text.lower() == "oishii":
+        buttons_template_message = TemplateSendMessage(
+        alt_text="Please tell me where you are",
+        template=ButtonsTemplate(
+            text="Please tell me where you are",
+            actions=[
+                URITemplateAction(
+                    label="Send my location",
+                    uri="line://nv/location"
+                    )
+                ]
+            )
+        )
+
+        line_bot_api.reply_message(
+            event.reply_token,
+            buttons_template_message
             )
 
-        else:
-            text=f'event.reply_token: {event.reply_token}\n' + f'event.source.user_id: {event.source.user_id}' + f'event.message.text: {event.message.text}'
+    elif event.message.text.lower() == "隨便吃":
 
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text=text)
-            )
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=pretty_text)
+        )
+
+    else:
+        text=f'event.reply_token: {event.reply_token}\n' + f'event.source.user_id: {event.source.user_id}' + f'event.message.text: {event.message.text}'
+
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=text)
+        )
 
 @handler.add(MessageEvent, message=LocationMessage)
 def handle_location_message(event):
