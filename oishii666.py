@@ -86,7 +86,7 @@ def pretty_echo(event):
             )
 
         else:
-            text=f'event.reply_token: {event.reply_token}\n' + 'event.source.user_id: {event.source.user_id}' + 'event.message.text: {event.message.text}'
+            text=f'event.reply_token: {event.reply_token}\n' + f'event.source.user_id: {event.source.user_id}' + f'event.message.text: {event.message.text}'
 
             line_bot_api.reply_message(
                 event.reply_token,
