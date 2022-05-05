@@ -128,7 +128,7 @@ def generate_carousel_columns(restaurants, restaurantsAmount):
     carouselColumns = []
 
     for i in range(restaurantsAmount):
-        if restaurants[i].get("photos") is None:
+        if restaurants[i].get("photos")[0] is None:
             thumbnailImageUrl = None
         else:
             photoReference = restaurants[i]["photos"][0]["photo_reference"]
