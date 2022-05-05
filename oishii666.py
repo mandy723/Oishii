@@ -109,20 +109,25 @@ def handle_location_message(event):
     #     )
     # )
 
-    carouselTemplateMessage = TemplateSendMessage(
-        alt_text = "用屁電腦rrrrr",
-        template = CarouselTemplate(columns = generate_carousel_columns(top20Restaurants))
-    )
+    restaurantsAmount = 10 if len(top20Restaurants) >= 10 else len(top20Restaurants)
+
+    if restaurantsAmount:
+        message = TemplateSendMessage(
+            alt_text = "用屁電腦rrrrr",
+            template = CarouselTemplate(columns = generate_carousel_columns(top20Restaurants, restaurantsAmount))
+        )
+    else:
+        message = TextSendMessage(text = "你家住海邊？")
 
     lineBotApi.reply_message(
             event.reply_token,
-            carouselTemplateMessage
+            message
         )
 
-def generate_carousel_columns(restaurants):
+def generate_carousel_columns(restaurants, restaurantsAmount):
     carouselColumns = []
 
-    for i in range(10):
+    for i in range(restaurantsAmount):
         if restaurants[i].get("photos") is None:
             thumbnailImageUrl = None
         else:
@@ -152,6 +157,6 @@ def generate_carousel_columns(restaurants):
 
     return carouselColumns
     
-    
+
 if __name__ == "__main__":
     app.run()
