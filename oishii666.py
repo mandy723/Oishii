@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import os
-import json
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -12,7 +11,6 @@ from linebot.models import (
     URITemplateAction,
     CarouselTemplate,
     CarouselColumn,
-    MessageAction
 )
 import configparser
 import random
@@ -28,16 +26,15 @@ GOOGLE_API_KEY = "AIzaSyABoNMQEdhfPSZexPLgkglXjXz6nRrqDxU"
 config = configparser.ConfigParser()
 config.read(os.path.join(BASE_DIR, 'config.ini'))
 
-line_bot_api = LineBotApi(config.get('line-bot', 'channel_access_token'))
+lineBotApi = LineBotApi(config.get('line-bot', 'channel_access_token'))
 handler = WebhookHandler(config.get('line-bot', 'channel_secret'))
 
-
 # 接收 LINE 的資訊
-@app.route("/callback", methods=['POST'])
+@app.route("/callback", methods = ['POST'])
 def callback():
     signature = request.headers['X-Line-Signature']
 
-    body = request.get_data(as_text=True)
+    body = request.get_data(as_text = True)
     app.logger.info("Request body: " + body)
     
     try:
@@ -50,83 +47,51 @@ def callback():
     return 'OK'
 
 # 學你說話
-@handler.add(MessageEvent, message=TextMessage)
+@handler.add(MessageEvent, message = TextMessage)
 def pretty_echo(event):
     
     # if event.source.user_id != "Udeadbeefdeadbeefdeadbeefdeadbeef":
         
-    # Phoebe 愛唱歌
-    pretty_note = '♫♪♬'
-    pretty_text = ''
-    
-    for i in event.message.text:
-    
-        pretty_text += i
-        pretty_text += random.choice(pretty_note)
-
     if event.message.text.lower() == "oishii":
-        buttons_template_message = TemplateSendMessage(
-        alt_text="Please tell me where you are",
-        template=ButtonsTemplate(
-            text="Please tell me where you are",
-            actions=[
+        buttonsTemplateMessage = TemplateSendMessage(
+        alt_text = "Please tell me where you are",
+        template = ButtonsTemplate(
+            text = "Please tell me where you are",
+            actions = [
                 URITemplateAction(
-                    label="Send my location",
-                    uri="line://nv/location"
+                    label = "Send my location",
+                    uri = "line://nv/location"
                     )
                 ]
             )
         )
 
-        line_bot_api.reply_message(
+        lineBotApi.reply_message(
             event.reply_token,
-            buttons_template_message
+            buttonsTemplateMessage
             )
 
-    elif event.message.text.lower() == "隨便吃":
+    # elif event.message.text.lower() == "隨便吃":
 
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=pretty_text)
-        )
+    #     lineBotApi.reply_message(
+    #         event.reply_token,
+    #         TextSendMessage(text=pretty_text)
+    #     )
 
-@handler.add(MessageEvent, message=LocationMessage)
+@handler.add(MessageEvent, message = LocationMessage)
 def handle_location_message(event):
-    # 獲取使用者的經緯度
     lat = event.message.latitude
     long = event.message.longitude
 
-    # 使用 Google API Start =========
-    # 1. 搜尋附近餐廳
-    nearby_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={}&location={},{}&radius={}&type=restaurant&language=zh-TW".format(GOOGLE_API_KEY, lat, long, 1500)
-    nearby_results = requests.get(nearby_url)
+    nearbyUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={}&location={},{}&radius={}&type=restaurant&language=zh-TW".format(GOOGLE_API_KEY, lat, long, 1500)
+
+    nearbyResults = requests.get(nearbyUrl)
+    
     # next_page_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={}&key={}}".format(nearby_results.json()["next_page_token"], GOOGLE_API_KEY)
 
-    # 隨機選擇一間餐廳
-    nearby_restaurants_dict = nearby_results.json()
-    top20_restaurants = nearby_restaurants_dict["results"]
-    restaurant = random.choice(top20_restaurants)
-
-    # 4. 檢查餐廳有沒有照片，有的話會顯示
-    if restaurant.get("photos") is None:
-        thumbnail_image_url = None
-    else:
-        # 根據文件，最多只會有一張照片
-        photo_reference = restaurant["photos"][0]["photo_reference"]
-        thumbnail_image_url = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photo_reference)
-    
-    # 5. 組裝餐廳詳細資訊
-    rating = "無" if restaurant.get("rating") is None else restaurant["rating"]
-    address = "沒有資料" if restaurant.get("vicinity") is None else restaurant["vicinity"]
-    details = "評分：{}\n地址：{}".format(rating, address)
-
-    # 6. 取得餐廳的 Google map 網址
-    map_url = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={place_id}".format(
-        lat=restaurant["geometry"]["location"]["lat"],
-        long=restaurant["geometry"]["location"]["lng"],
-        place_id=restaurant["place_id"]
-    )
-    # 使用 Google API End =========
+    nearbyRestaurantsDict = nearbyResults.json()
+    top20Restaurants = nearbyRestaurantsDict["results"]
+    # restaurant = random.choice(top20Restaurants)
 
     # 回覆使用 Buttons Template
     # buttons_template_message = TemplateSendMessage(
@@ -144,64 +109,49 @@ def handle_location_message(event):
     #     )
     # )
 
-    carousel_template_message = TemplateSendMessage(
-        alt_text=top20_restaurants[0]["name"],
-        template=CarouselTemplate(
-            columns=[
-                CarouselColumn(
-                    thumbnail_image_url=thumbnail_image_url,
-                    title=top20_restaurants[0]["name"],
-                    text="評分：{}\n地址：{}".format(top20_restaurants[0]["rating"], top20_restaurants[0]["vicinity"]),
-                    actions=[
+    carouselTemplateMessage = TemplateSendMessage(
+        alt_text = "用屁電腦rrrrr",
+        template = CarouselTemplate(columns = generate_carousel_columns(top20Restaurants))
+    )
+
+    lineBotApi.reply_message(
+            event.reply_token,
+            carouselTemplateMessage
+        )
+
+def generate_carousel_columns(restaurants):
+    carouselColumns = []
+
+    for i in range(10):
+        if restaurants[i].get("photos") is None:
+            thumbnailImageUrl = None
+        else:
+            photoReference = restaurants[i]["photos"][0]["photo_reference"]
+            thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
+            
+        rating = "無" if restaurants[i].get("rating") is None else restaurants[i]["rating"]
+        address = "沒有資料" if restaurants[i].get("vicinity") is None else restaurants[i]["vicinity"]
+        userRatingsTotal = "0" if restaurants[i].get("user_ratings_total") is None else restaurants[i]["user_ratings_total"]
+        
+        column = CarouselColumn(
+                    thumbnail_image_url = thumbnailImageUrl,
+                    title = restaurants[i]["name"],
+                    text = "評分：{}\n評論數：{}\n地址：{}".format(rating, userRatingsTotal, address),
+                    actions = [
                         URITemplateAction(
-                            label='查看地圖',
-                            uri="https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={place_id}".format(
-                                lat=top20_restaurants[0]["geometry"]["location"]["lat"],
-                                long=top20_restaurants[0]["geometry"]["location"]["lng"],
-                                place_id=top20_restaurants[0]["place_id"]
-                            )
-                        ),
-                    ]
-                ),
-                CarouselColumn(
-                    thumbnail_image_url=thumbnail_image_url,
-                    title=top20_restaurants[1]["name"],
-                    text="評分：{}\n地址：{}".format(top20_restaurants[1]["rating"], top20_restaurants[1]["vicinity"]),
-                    actions=[
-                        URITemplateAction(
-                            label='查看地圖',
-                            uri="https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={place_id}".format(
-                                lat=top20_restaurants[1]["geometry"]["location"]["lat"],
-                                long=top20_restaurants[1]["geometry"]["location"]["lng"],
-                                place_id=top20_restaurants[1]["place_id"]
-                            )
-                        ),
-                    ]
-                ),
-                CarouselColumn(
-                    thumbnail_image_url=thumbnail_image_url,
-                    title=top20_restaurants[2]["name"],
-                    text="評分：{}\n地址：{}".format(top20_restaurants[2]["rating"], top20_restaurants[2]["vicinity"]),
-                    actions=[
-                        URITemplateAction(
-                            label='查看地圖',
-                            uri="https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={place_id}".format(
-                                lat=top20_restaurants[2]["geometry"]["location"]["lat"],
-                                long=top20_restaurants[2]["geometry"]["location"]["lng"],
-                                place_id=top20_restaurants[2]["place_id"]
+                            label = '查看地圖',
+                            uri = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={placeId}".format(
+                                lat = restaurants[i]["geometry"]["location"]["lat"],
+                                long = restaurants[i]["geometry"]["location"]["lng"],
+                                placeId = restaurants[i]["place_id"]
                             )
                         ),
                     ]
                 )
-            ]
-        )
-    )
+        carouselColumns.append(column)
 
-    line_bot_api.reply_message(
-            event.reply_token,
-            # buttons_template_message
-            carousel_template_message
-        )
-
+    return carouselColumns
+    
+    
 if __name__ == "__main__":
     app.run()
