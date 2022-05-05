@@ -128,7 +128,7 @@ def generate_carousel_columns(restaurants, restaurantsAmount):
     carouselColumns = []
 
     for i in range(restaurantsAmount):
-        if restaurants[i].get("photos")[0] is None:
+        if restaurants[i].get("photos") is None:
             thumbnailImageUrl = None
         else:
             photoReference = restaurants[i]["photos"][0]["photo_reference"]
@@ -140,7 +140,7 @@ def generate_carousel_columns(restaurants, restaurantsAmount):
         
         column = CarouselColumn(
                     thumbnail_image_url = thumbnailImageUrl,
-                    title = restaurants[i]["name"],
+                    title = restaurants[i]["name"][:40],
                     text = "評分：{}\n評論數：{}\n地址：{}".format(rating, userRatingsTotal, address),
                     actions = [
                         URITemplateAction(
