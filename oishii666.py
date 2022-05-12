@@ -90,14 +90,14 @@ def handle_location_message(event):
     nearbyResults = results["results"]
     
     for i in range(2):  
-        if results['next_page_token'] == None:
+        if "next_page_token" not in results:
             break
-        
+    
         nextPageToken = results['next_page_token'] 
         nextPageUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={nextPageToken}&key={GOOGLE_API_KEY}"
         results = requests.get(nextPageUrl).json()
         nearbyResults += results["results"]
-        
+
     nearbyResults.sort(key = lambda s: s["rating"], reverse=True)
     
     # restaurant = random.choice(nearbyResults)
