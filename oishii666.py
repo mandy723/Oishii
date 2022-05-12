@@ -72,12 +72,12 @@ def pretty_echo(event):
             event.reply_token,
             buttonsTemplateMessage
             )
-    elif event.nessage.text == "I want more restaurant":
+    elif event.message.text == "I want more restaurant":
         restaurantsAmount = 10 if len(nearbyResults) >= 10 else len(nearbyResults)
         if restaurantsAmount:
             message = TemplateSendMessage(
                 alt_text = "用屁電腦rrrrr",
-                template = CarouselTemplate(columns = generate_carousel_columns(grestaurantsAmount))
+                template = CarouselTemplate(columns = generate_carousel_columns(restaurantsAmount))
             )
         else:
             message = TextSendMessage(text = "Please send location first")
