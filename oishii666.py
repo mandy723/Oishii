@@ -128,16 +128,11 @@ def handle_location_message(event):
     else:
         message = TextSendMessage(text = "你家住海邊？")
 
-    lineBotApi.reply_message(
-            event.reply_token,
-            message
-        )
-    
-    message = TextSendMessage(text = "我Zachary")
+    message1 = TextSendMessage(text = "我Zachary")
+    messageList = [message, message1]
     
     lineBotApi.reply_message(
-            event.reply_token,
-            message
+            event.reply_token, messageList
         )
 
 def generate_carousel_columns(restaurants, restaurantsAmount):
