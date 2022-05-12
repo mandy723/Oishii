@@ -198,7 +198,10 @@ def handle_location_message(event):
     
 def generate_carousel_columns(restaurantsAmount):
     carouselColumns = []
-    print("=====\n" + nearbyResults + "\n=====")
+    print("=====\n")
+    print(nearbyResults)
+    print("\n=====")
+    
     
     for i in range(restaurantsAmount):
         if nearbyResults[0].get("photos") is None:
