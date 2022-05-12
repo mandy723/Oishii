@@ -82,16 +82,25 @@ def pretty_echo(event):
 def handle_location_message(event):
     lat = event.message.latitude
     long = event.message.longitude
+    radius = 1500
 
-    nearbyUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={}&location={},{}&radius={}&type=restaurant&language=zh-TW".format(GOOGLE_API_KEY, lat, long, 1500)
+    nearbyUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={GOOGLE_API_KEY}&location={lat},{long}&radius={radius}&type=restaurant&language=zh-TW"
 
-    nearbyResults = requests.get(nearbyUrl)
+    results = requests.get(nearbyUrl).json()
+    nearbyResults = results["results"]
     
-    # next_page_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={}&key={}}".format(nearby_results.json()["next_page_token"], GOOGLE_API_KEY)
-
-    nearbyRestaurantsDict = nearbyResults.json()
-    top20Restaurants = nearbyRestaurantsDict["results"]
-    # restaurant = random.choice(top20Restaurants)
+    for i in range(2):  
+        if results['next_page_token'] == None:
+            break
+        
+        nextPageToken = results['next_page_token'] 
+        nextPageUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={nextPageToken}&key={GOOGLE_API_KEY}"
+        results = requests.get(nextPageUrl).json()
+        nearbyResults += results["results"]
+        
+    nearbyResults.sort(key = lambda s: s["rating"], reverse=True)
+    
+    # restaurant = random.choice(nearbyResults)
 
     # 回覆使用 Buttons Template
     # buttons_template_message = TemplateSendMessage(
@@ -109,12 +118,12 @@ def handle_location_message(event):
     #     )
     # )
 
-    restaurantsAmount = 10 if len(top20Restaurants) >= 10 else len(top20Restaurants)
+    restaurantsAmount = 10 if len(nearbyResults) >= 10 else len(nearbyResults)
 
     if restaurantsAmount:
         message = TemplateSendMessage(
             alt_text = "用屁電腦rrrrr",
-            template = CarouselTemplate(columns = generate_carousel_columns(top20Restaurants, restaurantsAmount))
+            template = CarouselTemplate(columns = generate_carousel_columns(nearbyResults, restaurantsAmount))
         )
     else:
         message = TextSendMessage(text = "你家住海邊？")
