@@ -132,6 +132,13 @@ def handle_location_message(event):
             event.reply_token,
             message
         )
+    
+    message = TextSendMessage(text = "我Zachary")
+    
+    lineBotApi.reply_message(
+            event.reply_token,
+            message
+        )
 
 def generate_carousel_columns(restaurants, restaurantsAmount):
     carouselColumns = []
