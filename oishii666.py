@@ -77,7 +77,7 @@ def pretty_echo(event):
         if restaurantsAmount:
             message = TemplateSendMessage(
                 alt_text = "用屁電腦rrrrr",
-                template = CarouselTemplate(columns = generate_carousel_columns(nearbyResults, restaurantsAmount))
+                template = CarouselTemplate(columns = generate_carousel_columns(grestaurantsAmount))
             )
         else:
             message = TextSendMessage(text = "Please send location first")
@@ -139,7 +139,7 @@ def handle_location_message(event):
     if restaurantsAmount:
         message = TemplateSendMessage(
             alt_text = "用屁電腦rrrrr",
-            template = CarouselTemplate(columns = generate_carousel_columns(nearbyResults, restaurantsAmount))
+            template = CarouselTemplate(columns = generate_carousel_columns(restaurantsAmount))
         )
     else:
         message = TextSendMessage(text = "你家住海邊？")
