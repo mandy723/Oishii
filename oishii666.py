@@ -22,6 +22,8 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 GOOGLE_API_KEY = "AIzaSyABoNMQEdhfPSZexPLgkglXjXz6nRrqDxU"
 
+nearbyResults = []
+
 # LINE 聊天機器人的基本資料
 config = configparser.ConfigParser()
 config.read(os.path.join(BASE_DIR, 'config.ini'))
@@ -70,7 +72,21 @@ def pretty_echo(event):
             event.reply_token,
             buttonsTemplateMessage
             )
+    elif event.nessage.text == "I want more restaurant":
+        restaurantsAmount = 10 if len(nearbyResults) >= 10 else len(nearbyResults)
+        if restaurantsAmount:
+            message = TemplateSendMessage(
+                alt_text = "用屁電腦rrrrr",
+                template = CarouselTemplate(columns = generate_carousel_columns(nearbyResults, restaurantsAmount))
+            )
+        else:
+            message = TextSendMessage(text = "Please send location first")
 
+        lineBotApi.reply_message(
+            event.reply_token,
+            message
+            )
+        
     # elif event.message.text.lower() == "隨便吃":
 
     #     lineBotApi.reply_message(
@@ -128,46 +144,91 @@ def handle_location_message(event):
     else:
         message = TextSendMessage(text = "你家住海邊？")
 
-    message1 = TextSendMessage(text = "我Zachary")
-    messageList = [message, message1]
+    buttonsTemplateMessage = TemplateSendMessage(
+        alt_text = "Wanna to see more?",
+        template = ButtonsTemplate(
+            text = "Wanna to see more?",
+            actions = [
+                MessageTemplateAction(
+                    label= "Yes!",
+                    text= "I want more restaurant"
+                    )
+                ]
+            )
+        )
+    
+    messageList = [message, buttonsTemplateMessage]
     
     lineBotApi.reply_message(
             event.reply_token, messageList
         )
 
-def generate_carousel_columns(restaurants, restaurantsAmount):
+# def generate_carousel_columns(restaurants, restaurantsAmount):
+#     carouselColumns = []
+
+#     for i in range(restaurantsAmount):
+#         if restaurants[i].get("photos") is None:
+#             thumbnailImageUrl = None
+#         else:
+#             photoReference = restaurants[i]["photos"][0]["photo_reference"]
+#             thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
+            
+#         rating = "無" if restaurants[i].get("rating") is None else restaurants[i]["rating"]
+#         address = "沒有資料" if restaurants[i].get("vicinity") is None else restaurants[i]["vicinity"]
+#         userRatingsTotal = "0" if restaurants[i].get("user_ratings_total") is None else restaurants[i]["user_ratings_total"]
+        
+#         column = CarouselColumn(
+#                     thumbnail_image_url = thumbnailImageUrl,
+#                     title = restaurants[i]["name"][:40],
+#                     text = "評分：{}\n評論數：{}\n地址：{}".format(rating, userRatingsTotal, address),
+#                     actions = [
+#                         URITemplateAction(
+#                             label = '查看地圖',
+#                             uri = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={placeId}".format(
+#                                 lat = restaurants[i]["geometry"]["location"]["lat"],
+#                                 long = restaurants[i]["geometry"]["location"]["lng"],
+#                                 placeId = restaurants[i]["place_id"]
+#                             )
+#                         ),
+#                     ]
+#                 )
+#         carouselColumns.append(column)
+
+#     return carouselColumns
+    
+def generate_carousel_columns(restaurantsAmount):
     carouselColumns = []
 
     for i in range(restaurantsAmount):
-        if restaurants[i].get("photos") is None:
+        if nearbyResults[0].get("photos") is None:
             thumbnailImageUrl = None
         else:
-            photoReference = restaurants[i]["photos"][0]["photo_reference"]
+            photoReference = nearbyResults[0]["photos"][0]["photo_reference"]
             thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
             
-        rating = "無" if restaurants[i].get("rating") is None else restaurants[i]["rating"]
-        address = "沒有資料" if restaurants[i].get("vicinity") is None else restaurants[i]["vicinity"]
-        userRatingsTotal = "0" if restaurants[i].get("user_ratings_total") is None else restaurants[i]["user_ratings_total"]
+        rating = "無" if nearbyResults[0].get("rating") is None else nearbyResults[0]["rating"]
+        address = "沒有資料" if nearbyResults[0].get("vicinity") is None else nearbyResults[0]["vicinity"]
+        userRatingsTotal = "0" if nearbyResults[0].get("user_ratings_total") is None else nearbyResults[0]["user_ratings_total"]
         
         column = CarouselColumn(
                     thumbnail_image_url = thumbnailImageUrl,
-                    title = restaurants[i]["name"][:40],
+                    title = nearbyResults[0]["name"][:40],
                     text = "評分：{}\n評論數：{}\n地址：{}".format(rating, userRatingsTotal, address),
                     actions = [
                         URITemplateAction(
                             label = '查看地圖',
                             uri = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={placeId}".format(
-                                lat = restaurants[i]["geometry"]["location"]["lat"],
-                                long = restaurants[i]["geometry"]["location"]["lng"],
-                                placeId = restaurants[i]["place_id"]
+                                lat = nearbyResults[0]["geometry"]["location"]["lat"],
+                                long = nearbyResults[0]["geometry"]["location"]["lng"],
+                                placeId = nearbyResults[0]["place_id"]
                             )
                         ),
                     ]
                 )
         carouselColumns.append(column)
+        nearbyResults.pop(0)
 
     return carouselColumns
-    
 
 if __name__ == "__main__":
     app.run()
