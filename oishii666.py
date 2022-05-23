@@ -22,7 +22,8 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 GOOGLE_API_KEY = "AIzaSyABoNMQEdhfPSZexPLgkglXjXz6nRrqDxU"
 
-nearbyResults = []
+nearbyResults = {}
+# {"ID":"nearbyResults"}
 
 # LINE 聊天機器人的基本資料
 config = configparser.ConfigParser()
@@ -72,12 +73,13 @@ def pretty_echo(event):
             event.reply_token,
             buttonsTemplateMessage
             )
+        
     elif event.message.text == "I want more restaurant":
-        restaurantsAmount = 10 if len(nearbyResults) >= 10 else len(nearbyResults)
+        restaurantsAmount = 10 if len(nearbyResults[event.source.user_id]) >= 10 else len(nearbyResults[event.source.user_id])
         if restaurantsAmount:
             message = TemplateSendMessage(
                 alt_text = "用屁電腦rrrrr",
-                template = CarouselTemplate(columns = generate_carousel_columns(restaurantsAmount))
+                template = CarouselTemplate(columns = generate_carousel_columns(restaurantsAmount, event.source.user_id))
             )
         else:
             message = TextSendMessage(text = "Please send location first")
@@ -96,6 +98,7 @@ def pretty_echo(event):
 
 @handler.add(MessageEvent, message = LocationMessage)
 def handle_location_message(event):
+
     lat = event.message.latitude
     long = event.message.longitude
     radius = 1500
@@ -103,7 +106,7 @@ def handle_location_message(event):
     nearbyUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={GOOGLE_API_KEY}&location={lat},{long}&radius={radius}&type=restaurant&language=zh-TW"
 
     results = requests.get(nearbyUrl).json()
-    nearbyResults = results["results"]
+    nearbyResults[event.source.user_id] = results["results"]
     
     for i in range(2):  
         if "next_page_token" not in results:
@@ -112,9 +115,9 @@ def handle_location_message(event):
         nextPageToken = results['next_page_token'] 
         nextPageUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={nextPageToken}&key={GOOGLE_API_KEY}"
         results = requests.get(nextPageUrl).json()
-        nearbyResults += results["results"]
+        nearbyResults[event.source.user_id] += results["results"]
 
-    nearbyResults.sort(key = lambda s: s["rating"], reverse=True)
+    nearbyResults[event.source.user_id].sort(key = lambda s: s["rating"], reverse=True)
     
     # restaurant = random.choice(nearbyResults)
 
@@ -134,12 +137,12 @@ def handle_location_message(event):
     #     )
     # )
 
-    restaurantsAmount = 10 if len(nearbyResults) >= 10 else len(nearbyResults)
+    restaurantsAmount = 10 if len(nearbyResults[event.source.user_id]) >= 10 else len(nearbyResults[event.source.user_id])
 
     if restaurantsAmount:
         message = TemplateSendMessage(
             alt_text = "用屁電腦rrrrr",
-            template = CarouselTemplate(columns = generate_carousel_columns(restaurantsAmount))
+            template = CarouselTemplate(columns = generate_carousel_columns(restaurantsAmount, event.source.user_id))
         )
     else:
         message = TextSendMessage(text = "你家住海邊？")
@@ -196,7 +199,7 @@ def handle_location_message(event):
 
 #     return carouselColumns
     
-def generate_carousel_columns(restaurantsAmount):
+def generate_carousel_columns(restaurantsAmount, userId):
     carouselColumns = []
     print("=====\n")
     print(nearbyResults)
@@ -204,33 +207,33 @@ def generate_carousel_columns(restaurantsAmount):
     
     
     for i in range(restaurantsAmount):
-        if nearbyResults[0].get("photos") is None:
+        if nearbyResults[userId][0].get("photos") is None:
             thumbnailImageUrl = None
         else:
-            photoReference = nearbyResults[0]["photos"][0]["photo_reference"]
+            photoReference = nearbyResults[userId][0]["photos"][0]["photo_reference"]
             thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
             
-        rating = "無" if nearbyResults[0].get("rating") is None else nearbyResults[0]["rating"]
-        address = "沒有資料" if nearbyResults[0].get("vicinity") is None else nearbyResults[0]["vicinity"]
-        userRatingsTotal = "0" if nearbyResults[0].get("user_ratings_total") is None else nearbyResults[0]["user_ratings_total"]
+        rating = "無" if nearbyResults[userId][0].get("rating") is None else nearbyResults[userId][0]["rating"]
+        address = "沒有資料" if nearbyResults[userId][0].get("vicinity") is None else nearbyResults[userId][0]["vicinity"]
+        userRatingsTotal = "0" if nearbyResults[userId][0].get("user_ratings_total") is None else nearbyResults[userId][0]["user_ratings_total"]
         
         column = CarouselColumn(
                     thumbnail_image_url = thumbnailImageUrl,
-                    title = nearbyResults[0]["name"][:40],
+                    title = nearbyResults[userId][0]["name"][:40],
                     text = "評分：{}\n評論數：{}\n地址：{}".format(rating, userRatingsTotal, address),
                     actions = [
                         URITemplateAction(
                             label = '查看地圖',
                             uri = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={placeId}".format(
-                                lat = nearbyResults[0]["geometry"]["location"]["lat"],
-                                long = nearbyResults[0]["geometry"]["location"]["lng"],
-                                placeId = nearbyResults[0]["place_id"]
+                                lat = nearbyResults[userId][0]["geometry"]["location"]["lat"],
+                                long = nearbyResults[userId][0]["geometry"]["location"]["lng"],
+                                placeId = nearbyResults[userId][0]["place_id"]
                             )
                         ),
                     ]
                 )
         carouselColumns.append(column)
-        nearbyResults.pop(0)
+        nearbyResults[userId].pop(0)
 
     return carouselColumns
 
