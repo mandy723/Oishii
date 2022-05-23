@@ -76,6 +76,10 @@ def pretty_echo(event):
             )
         
     elif event.message.text == "I want more restaurants":
+        print("====================\n")
+        print("In text message ->>>> " + str(event.source.user_id))
+        print("====================\n")
+        
         restaurantsAmount = 10 if len(nearbyResults[event.source.user_id]) >= 10 else len(nearbyResults[event.source.user_id])
         if restaurantsAmount:
             message = TemplateSendMessage(
@@ -99,6 +103,10 @@ def pretty_echo(event):
 
 @handler.add(MessageEvent, message = LocationMessage)
 def handle_location_message(event):
+
+    print("====================\n")
+    print("In location message ->>>> " + str(event.source.user_id))
+    print("====================\n")
 
     lat = event.message.latitude
     long = event.message.longitude
