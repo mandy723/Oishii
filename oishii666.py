@@ -16,7 +16,7 @@ from linebot.models import (
 import configparser
 import random
 import requests
-
+import time
 
 app = Flask(__name__)
 
@@ -114,6 +114,7 @@ def handle_location_message(event):
     nearbyResults[event.source.user_id] = results["results"]
     
     for i in range(2):  
+        time.sleep(3)
         if "next_page_token" not in results:
             break
     
