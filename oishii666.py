@@ -121,11 +121,19 @@ def handle_location_message(event):
         nextPageUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={nextPageToken}&key={GOOGLE_API_KEY}&language=zh-TW"
         results = requests.get(nextPageUrl).json()
         nearbyResults[event.source.user_id] += results["results"]
+        print("====================\n")
+        print(str(i) + " In for loop ->>>> " + str(event.source.user_id))
+        print(str(i) + " In results ->>>> " + results)
+        print(len(nearbyResults))
+        print(nearbyResults)
+        print("====================\n")
+        
 
     nearbyResults[event.source.user_id].sort(key = lambda s: s["rating"], reverse=True)
     
     print("====================\n")
     print("In location message ->>>> " + str(event.source.user_id))
+    print(len(nearbyResults))
     print(nearbyResults)
     print("====================\n")
     
