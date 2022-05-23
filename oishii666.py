@@ -104,12 +104,6 @@ def pretty_echo(event):
 
 @handler.add(MessageEvent, message = LocationMessage)
 def handle_location_message(event):
-
-    print("====================\n")
-    print("In location message ->>>> " + str(event.source.user_id))
-    print(nearbyResults)
-    print("====================\n")
-
     lat = event.message.latitude
     long = event.message.longitude
     radius = 1500
@@ -129,6 +123,11 @@ def handle_location_message(event):
         nearbyResults[event.source.user_id] += results["results"]
 
     nearbyResults[event.source.user_id].sort(key = lambda s: s["rating"], reverse=True)
+    
+    print("====================\n")
+    print("In location message ->>>> " + str(event.source.user_id))
+    print(nearbyResults)
+    print("====================\n")
     
     # restaurant = random.choice(nearbyResults)
 
@@ -232,11 +231,10 @@ def generate_carousel_columns(restaurantsAmount, userId):
         print("====================\n")
         
         userRatingsTotal = "0" if nearbyResults[userId][0].get("user_ratings_total") is None else nearbyResults[userId][0]["user_ratings_total"]
-        
         column = CarouselColumn(
                     thumbnail_image_url = thumbnailImageUrl,
                     title = nearbyResults[userId][0]["name"][:40],
-                    text = "評分：{}\n評論數：{}\n地址：{}".format(rating, userRatingsTotal, address),
+                    text = f"評分：{rating}\n評論數：{userRatingsTotal}\n地址：{address}"[:60],
                     actions = [
                         URITemplateAction(
                             label = '查看地圖',
