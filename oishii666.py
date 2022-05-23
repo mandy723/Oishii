@@ -126,7 +126,7 @@ def handle_location_message(event):
         print(str(i) + " In for loop ->>>> " + str(event.source.user_id))
         print(str(i) + " In results ->>>>", end=" ")
         print(results)
-        print(len(nearbyResults))
+        print(len(nearbyResults[event.source.user_id]))
         print(nearbyResults)
         print("====================\n")
         
@@ -135,6 +135,7 @@ def handle_location_message(event):
     
     print("====================\n")
     print("In location message ->>>> " + str(event.source.user_id))
+    print(len(nearbyResults[event.source.user_id]))
     print(len(nearbyResults))
     print(nearbyResults)
     print("====================\n")
