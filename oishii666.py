@@ -118,7 +118,7 @@ def handle_location_message(event):
             break
     
         nextPageToken = results['next_page_token'] 
-        nextPageUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={nextPageToken}&key={GOOGLE_API_KEY}"
+        nextPageUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={nextPageToken}&key={GOOGLE_API_KEY}&language=zh-TW"
         results = requests.get(nextPageUrl).json()
         nearbyResults[event.source.user_id] += results["results"]
 
