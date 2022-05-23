@@ -78,6 +78,7 @@ def pretty_echo(event):
     elif event.message.text == "I want more restaurants":
         print("====================\n")
         print("In text message ->>>> " + str(event.source.user_id))
+        print(nearbyResults)
         print("====================\n")
         
         restaurantsAmount = 10 if len(nearbyResults[event.source.user_id]) >= 10 else len(nearbyResults[event.source.user_id])
@@ -106,6 +107,7 @@ def handle_location_message(event):
 
     print("====================\n")
     print("In location message ->>>> " + str(event.source.user_id))
+    print(nearbyResults)
     print("====================\n")
 
     lat = event.message.latitude
