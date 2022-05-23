@@ -7,6 +7,7 @@ from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,
     LocationMessage,
     TemplateSendMessage,
+    MessageTemplateAction,
     ButtonsTemplate,
     URITemplateAction,
     CarouselTemplate,
@@ -74,7 +75,7 @@ def pretty_echo(event):
             buttonsTemplateMessage
             )
         
-    elif event.message.text == "I want more restaurant":
+    elif event.message.text == "I want more restaurants":
         restaurantsAmount = 10 if len(nearbyResults[event.source.user_id]) >= 10 else len(nearbyResults[event.source.user_id])
         if restaurantsAmount:
             message = TemplateSendMessage(
@@ -154,7 +155,7 @@ def handle_location_message(event):
             actions = [
                 MessageTemplateAction(
                     label= "Yes!",
-                    text= "I want more restaurant"
+                    text= "I want more restaurants"
                     )
                 ]
             )
