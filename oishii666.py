@@ -216,6 +216,11 @@ def generate_carousel_columns(restaurantsAmount, userId):
             
         rating = "無" if nearbyResults[userId][0].get("rating") is None else nearbyResults[userId][0]["rating"]
         address = "沒有資料" if nearbyResults[userId][0].get("vicinity") is None else nearbyResults[userId][0]["vicinity"]
+        
+        print("====================\n")
+        print(i + " ->>>> " + address)
+        print("====================\n")
+        
         userRatingsTotal = "0" if nearbyResults[userId][0].get("user_ratings_total") is None else nearbyResults[userId][0]["user_ratings_total"]
         
         column = CarouselColumn(
