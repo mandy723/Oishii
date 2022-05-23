@@ -123,7 +123,8 @@ def handle_location_message(event):
         nearbyResults[event.source.user_id] += results["results"]
         print("====================\n")
         print(str(i) + " In for loop ->>>> " + str(event.source.user_id))
-        print(str(i) + " In results ->>>> " + results)
+        print(str(i) + " In results ->>>>", end=" ")
+        print(results)
         print(len(nearbyResults))
         print(nearbyResults)
         print("====================\n")
