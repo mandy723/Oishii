@@ -99,11 +99,12 @@ def pretty_echo(event):
             )
         
     elif event.message.text.lower() == "隨便吃":
-        print("========== Get redis data with user id -> \n" + str(r.hget(event.source.user_id, "r1").decode()))
+        restaurant = json.loads(r.hget(event.source.user_id, "r"+str(random.randint(1,10))).decode())
+        message = generate_restaurant_button_message(restaurant)
 
         lineBotApi.reply_message(
             event.reply_token,
-            TextSendMessage(text='testing')
+            message
         )
 
 @handler.add(MessageEvent, message = LocationMessage)
@@ -135,7 +136,6 @@ def handle_location_message(event):
     restaurants = {}
     for i in range(len(nearbyResults[event.source.user_id])):
         restaurants["r"+str(i+1)] = json.dumps(nearbyResults[event.source.user_id][i])
-    print(restaurants)
     r.hmset(event.source.user_id, restaurants)
     
     # restaurant = random.choice(nearbyResults)
@@ -161,7 +161,7 @@ def handle_location_message(event):
     if restaurantsAmount:
         message = TemplateSendMessage(
             alt_text = "用屁電腦rrrrr",
-            template = CarouselTemplate(columns = generate_carousel_columns(restaurantsAmount, event.source.user_id))
+            template = CarouselTemplate(columns = generate_carousel_columns(restaurantsAmount, nearbyResults[event.source.user_id]))
         )
     else:
         message = TextSendMessage(text = "你家住海邊？")
@@ -185,39 +185,71 @@ def handle_location_message(event):
             event.reply_token, messageList
         )
     
-def generate_carousel_columns(restaurantsAmount, userId):
+def generate_carousel_columns(restaurantsAmount, restaurants):
     carouselColumns = []
     
     for i in range(restaurantsAmount):
-        if nearbyResults[userId][0].get("photos") is None:
+        if restaurants[0].get("photos") is None:
             thumbnailImageUrl = None
         else:
-            photoReference = nearbyResults[userId][0]["photos"][0]["photo_reference"]
+            photoReference = restaurants[0]["photos"][0]["photo_reference"]
             thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
             
-        rating = "無" if nearbyResults[userId][0].get("rating") is None or nearbyResults[userId][0]["rating"] == 0.0 else nearbyResults[userId][0]["rating"]
-        address = "沒有資料" if nearbyResults[userId][0].get("vicinity") is None else nearbyResults[userId][0]["vicinity"]
+        rating = "無" if restaurants[0].get("rating") is None or restaurants[0]["rating"] == 0.0 else restaurants[0]["rating"]
+        address = "沒有資料" if restaurants[0].get("vicinity") is None else restaurants[0]["vicinity"]
         
-        userRatingsTotal = "0" if nearbyResults[userId][0].get("user_ratings_total") is None else nearbyResults[userId][0]["user_ratings_total"]
+        userRatingsTotal = "0" if restaurants[0].get("user_ratings_total") is None else restaurants[0]["user_ratings_total"]
         column = CarouselColumn(
                     thumbnail_image_url = thumbnailImageUrl,
-                    title = nearbyResults[userId][0]["name"][:40],
+                    title = restaurants[0]["name"][:40],
                     text = f"評分：{rating}\n評論數：{userRatingsTotal}\n地址：{address}"[:60],
                     actions = [
                         URITemplateAction(
                             label = '查看地圖',
                             uri = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={placeId}".format(
-                                lat = nearbyResults[userId][0]["geometry"]["location"]["lat"],
-                                long = nearbyResults[userId][0]["geometry"]["location"]["lng"],
-                                placeId = nearbyResults[userId][0]["place_id"]
+                                lat = restaurants[0]["geometry"]["location"]["lat"],
+                                long = restaurants[0]["geometry"]["location"]["lng"],
+                                placeId = restaurants[0]["place_id"]
                             )
                         ),
                     ]
                 )
         carouselColumns.append(column)
-        nearbyResults[userId].pop(0)
+        restaurants.pop(0)
 
     return carouselColumns
+
+def generate_restaurant_button_message(restaurant):
+    if restaurant[0].get("photos") is None:
+        thumbnailImageUrl = None
+    else:
+        photoReference = restaurant[0]["photos"][0]["photo_reference"]
+        thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
+        
+    rating = "無" if restaurant[0].get("rating") is None or restaurant[0]["rating"] == 0.0 else restaurant[0]["rating"]
+    address = "沒有資料" if restaurant[0].get("vicinity") is None else restaurant[0]["vicinity"]
+    
+    userRatingsTotal = "0" if restaurant[0].get("user_ratings_total") is None else restaurant[0]["user_ratings_total"]
+
+    buttons_template = TemplateSendMessage(
+        alt_text = 'Please use mobile phone to check the message',
+        template = ButtonsTemplate(
+            title = restaurant[0]["name"][:40],
+            text = f"評分：{rating}\n評論數：{userRatingsTotal}\n地址：{address}"[:60],
+            thumbnail_image_url = thumbnailImageUrl,
+            actions = [
+                URITemplateAction(
+                    label = '查看地圖',
+                    uri = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={placeId}".format(
+                        lat = restaurant["geometry"]["location"]["lat"],
+                        long = restaurant["geometry"]["location"]["lng"],
+                        placeId = restaurant["place_id"]
+                    )
+                ),
+            ]
+        )
+    )
+    return buttons_template
 
 if __name__ == "__main__":
     app.run()
