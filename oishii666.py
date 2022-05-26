@@ -130,7 +130,9 @@ def handle_location_message(event):
         print(nearbyResults)
         print("====================\n")
         
-
+    for i in nearbyResults[event.source.user_id]:
+        if i.get("rating") is None:
+            i["rating"] = 0.0
     nearbyResults[event.source.user_id].sort(key = lambda s: s["rating"], reverse=True)
     
     print("====================\n")
