@@ -14,6 +14,7 @@ from linebot.models import (
     CarouselColumn,
 )
 import redis
+import json
 import configparser
 import random
 import requests
@@ -133,7 +134,7 @@ def handle_location_message(event):
 
     restaurants = {}
     for i in range(len(nearbyResults[event.source.user_id])):
-        restaurants["r"+str(i+1)] = nearbyResults[event.source.user_id][i].dumps()
+        restaurants["r"+str(i+1)] = json.dumps(nearbyResults[event.source.user_id][i])
     print(restaurants)
     r.hmset(event.source.user_id, restaurants)
     
