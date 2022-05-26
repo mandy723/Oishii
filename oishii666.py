@@ -85,10 +85,11 @@ def pretty_echo(event):
         
     elif event.message.text == "I want more restaurants":
         restaurantsAmount = 10 if len(nearbyResults[event.source.user_id]) >= 10 else len(nearbyResults[event.source.user_id])
+
         if restaurantsAmount:
             message = TemplateSendMessage(
                 alt_text = "用屁電腦rrrrr",
-                template = CarouselTemplate(columns = generate_carousel_columns(restaurantsAmount, event.source.user_id))
+                template = CarouselTemplate(columns = generate_carousel_columns(restaurantsAmount, nearbyResults[event.source.user_id]))
             )
         else:
             message = TextSendMessage(text = "Please send location first")
@@ -220,21 +221,21 @@ def generate_carousel_columns(restaurantsAmount, restaurants):
     return carouselColumns
 
 def generate_restaurant_button_message(restaurant):
-    if restaurant[0].get("photos") is None:
+    if restaurant.get("photos") is None:
         thumbnailImageUrl = None
     else:
-        photoReference = restaurant[0]["photos"][0]["photo_reference"]
+        photoReference = restaurant["photos"][0]["photo_reference"]
         thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
         
-    rating = "無" if restaurant[0].get("rating") is None or restaurant[0]["rating"] == 0.0 else restaurant[0]["rating"]
-    address = "沒有資料" if restaurant[0].get("vicinity") is None else restaurant[0]["vicinity"]
+    rating = "無" if restaurant.get("rating") is None or restaurant["rating"] == 0.0 else restaurant["rating"]
+    address = "沒有資料" if restaurant.get("vicinity") is None else restaurant["vicinity"]
     
-    userRatingsTotal = "0" if restaurant[0].get("user_ratings_total") is None else restaurant[0]["user_ratings_total"]
+    userRatingsTotal = "0" if restaurant.get("user_ratings_total") is None else restaurant["user_ratings_total"]
 
     buttons_template = TemplateSendMessage(
         alt_text = 'Please use mobile phone to check the message',
         template = ButtonsTemplate(
-            title = restaurant[0]["name"][:40],
+            title = restaurant["name"][:40],
             text = f"評分：{rating}\n評論數：{userRatingsTotal}\n地址：{address}"[:60],
             thumbnail_image_url = thumbnailImageUrl,
             actions = [
