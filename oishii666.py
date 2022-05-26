@@ -13,12 +13,19 @@ from linebot.models import (
     CarouselTemplate,
     CarouselColumn,
 )
+import redis
 import configparser
 import random
 import requests
 import time
 
 app = Flask(__name__)
+
+r = redis.Redis(
+    host='redis-18784.c299.asia-northeast1-1.gce.cloud.redislabs.com',
+    port=18784, 
+    password='YekHABXgrRh7pJdr1OvKbfXTyDtcphjD'
+    )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 GOOGLE_API_KEY = "AIzaSyABoNMQEdhfPSZexPLgkglXjXz6nRrqDxU"
@@ -95,12 +102,13 @@ def pretty_echo(event):
             message
             )
         
-    # elif event.message.text.lower() == "隨便吃":
+    elif event.message.text.lower() == "隨便吃":
+        print("========== Get redis data with user id -> \n" + str(r.get(event.source.user_id)))
 
-    #     lineBotApi.reply_message(
-    #         event.reply_token,
-    #         TextSendMessage(text=pretty_text)
-    #     )
+        lineBotApi.reply_message(
+            event.reply_token,
+            TextSendMessage(text='testing')
+        )
 
 @handler.add(MessageEvent, message = LocationMessage)
 def handle_location_message(event):
@@ -134,6 +142,7 @@ def handle_location_message(event):
         if i.get("rating") is None:
             i["rating"] = 0.0
     nearbyResults[event.source.user_id].sort(key = lambda s: s["rating"], reverse=True)
+    r.set(event.source.user_id, nearbyResults[event.source.user_id])
     
     print("====================\n")
     print("In location message ->>>> " + str(event.source.user_id))
@@ -236,7 +245,7 @@ def generate_carousel_columns(restaurantsAmount, userId):
             photoReference = nearbyResults[userId][0]["photos"][0]["photo_reference"]
             thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
             
-        rating = "無" if nearbyResults[userId][0].get("rating") is None else nearbyResults[userId][0]["rating"]
+        rating = "無" if nearbyResults[userId][0].get("rating") is None or nearbyResults[userId][0]["rating"] == 0.0 else nearbyResults[userId][0]["rating"]
         address = "沒有資料" if nearbyResults[userId][0].get("vicinity") is None else nearbyResults[userId][0]["vicinity"]
         
         print("====================\n")
