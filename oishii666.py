@@ -132,7 +132,7 @@ def handle_location_message(event):
     nearbyResults[event.source.user_id].sort(key = lambda s: s["rating"], reverse=True)
 
     restaurants = {}
-    for i in range(nearbyResults[event.source.user_id]):
+    for i in range(len(nearbyResults[event.source.user_id])):
         restaurants["r"+str(i+1)] = nearbyResults[event.source.user_id][i].dumps()
     print(restaurants)
     r.hmset(event.source.user_id, restaurants)
