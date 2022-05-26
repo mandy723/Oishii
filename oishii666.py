@@ -83,11 +83,6 @@ def pretty_echo(event):
             )
         
     elif event.message.text == "I want more restaurants":
-        print("====================\n")
-        print("In text message ->>>> " + str(event.source.user_id))
-        print(nearbyResults)
-        print("====================\n")
-        
         restaurantsAmount = 10 if len(nearbyResults[event.source.user_id]) >= 10 else len(nearbyResults[event.source.user_id])
         if restaurantsAmount:
             message = TemplateSendMessage(
@@ -103,7 +98,7 @@ def pretty_echo(event):
             )
         
     elif event.message.text.lower() == "隨便吃":
-        print("========== Get redis data with user id -> \n" + str(r.get(event.source.user_id)))
+        print("========== Get redis data with user id -> \n" + str(r.hget(event.source.user_id, "r1").decode()))
 
         lineBotApi.reply_message(
             event.reply_token,
@@ -130,26 +125,17 @@ def handle_location_message(event):
         nextPageUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={nextPageToken}&key={GOOGLE_API_KEY}&language=zh-TW"
         results = requests.get(nextPageUrl).json()
         nearbyResults[event.source.user_id] += results["results"]
-        print("====================\n")
-        print(str(i) + " In for loop ->>>> " + str(event.source.user_id))
-        print(str(i) + " In results ->>>>", end=" ")
-        print(results)
-        print(len(nearbyResults[event.source.user_id]))
-        print(nearbyResults)
-        print("====================\n")
         
     for i in nearbyResults[event.source.user_id]:
         if i.get("rating") is None:
             i["rating"] = 0.0
     nearbyResults[event.source.user_id].sort(key = lambda s: s["rating"], reverse=True)
-    r.set(event.source.user_id, nearbyResults[event.source.user_id])
-    
-    print("====================\n")
-    print("In location message ->>>> " + str(event.source.user_id))
-    print(len(nearbyResults[event.source.user_id]))
-    print(len(nearbyResults))
-    print(nearbyResults)
-    print("====================\n")
+
+    restaurants = {}
+    for i in range(nearbyResults[event.source.user_id]):
+        restaurants["r"+str(i+1)] = nearbyResults[event.source.user_id][i].dumps()
+    print(restaurants)
+    r.hmset(event.source.user_id, restaurants)
     
     # restaurant = random.choice(nearbyResults)
 
@@ -197,46 +183,9 @@ def handle_location_message(event):
     lineBotApi.reply_message(
             event.reply_token, messageList
         )
-
-# def generate_carousel_columns(restaurants, restaurantsAmount):
-#     carouselColumns = []
-
-#     for i in range(restaurantsAmount):
-#         if restaurants[i].get("photos") is None:
-#             thumbnailImageUrl = None
-#         else:
-#             photoReference = restaurants[i]["photos"][0]["photo_reference"]
-#             thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
-            
-#         rating = "無" if restaurants[i].get("rating") is None else restaurants[i]["rating"]
-#         address = "沒有資料" if restaurants[i].get("vicinity") is None else restaurants[i]["vicinity"]
-#         userRatingsTotal = "0" if restaurants[i].get("user_ratings_total") is None else restaurants[i]["user_ratings_total"]
-        
-#         column = CarouselColumn(
-#                     thumbnail_image_url = thumbnailImageUrl,
-#                     title = restaurants[i]["name"][:40],
-#                     text = "評分：{}\n評論數：{}\n地址：{}".format(rating, userRatingsTotal, address),
-#                     actions = [
-#                         URITemplateAction(
-#                             label = '查看地圖',
-#                             uri = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={placeId}".format(
-#                                 lat = restaurants[i]["geometry"]["location"]["lat"],
-#                                 long = restaurants[i]["geometry"]["location"]["lng"],
-#                                 placeId = restaurants[i]["place_id"]
-#                             )
-#                         ),
-#                     ]
-#                 )
-#         carouselColumns.append(column)
-
-#     return carouselColumns
     
 def generate_carousel_columns(restaurantsAmount, userId):
     carouselColumns = []
-    print("=====\n")
-    print(nearbyResults)
-    print("\n=====")
-    
     
     for i in range(restaurantsAmount):
         if nearbyResults[userId][0].get("photos") is None:
@@ -247,10 +196,6 @@ def generate_carousel_columns(restaurantsAmount, userId):
             
         rating = "無" if nearbyResults[userId][0].get("rating") is None or nearbyResults[userId][0]["rating"] == 0.0 else nearbyResults[userId][0]["rating"]
         address = "沒有資料" if nearbyResults[userId][0].get("vicinity") is None else nearbyResults[userId][0]["vicinity"]
-        
-        print("====================\n")
-        print(str(i) + " ->>>> " + address)
-        print("====================\n")
         
         userRatingsTotal = "0" if nearbyResults[userId][0].get("user_ratings_total") is None else nearbyResults[userId][0]["user_ratings_total"]
         column = CarouselColumn(
