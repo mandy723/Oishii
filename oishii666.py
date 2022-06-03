@@ -257,7 +257,7 @@ def generate_restaurant_button_message(restaurant):
 def prepareCarousel(userId):
     restaurantsInfo = redisDB.hgetall(userId)
     print("infooooooooooooooooo", restaurantsInfo)
-    remainingRestaurants = int(restaurantsInfo.pop("remainingRestaurants").decode())
+    remainingRestaurants = int(restaurantsInfo.pop(("remainingRestaurants").encode()).decode())
     restaurants = []
     for r in list(restaurantsInfo.values())[-remainingRestaurants:]:
         restaurants.append(json.loads(r.decode()))
