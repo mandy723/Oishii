@@ -22,7 +22,7 @@ import time
 
 app = Flask(__name__)
 
-r = redis.Redis(
+redisDB = redis.Redis(
     host='redis-18784.c299.asia-northeast1-1.gce.cloud.redislabs.com',
     port=18784, 
     password='YekHABXgrRh7pJdr1OvKbfXTyDtcphjD'
@@ -90,7 +90,7 @@ def pretty_echo(event):
                 alt_text = "用屁電腦rrrrr",
                 template = CarouselTemplate(columns = generate_carousel_columns(columnAmount, restaurants))
             )
-            r.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
+            redisDB.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
         
         else:
             message = TextSendMessage(text = "Please send location first")
@@ -101,7 +101,7 @@ def pretty_echo(event):
             )
         
     elif event.message.text.lower() == "隨便吃":
-        restaurant = json.loads(r.hget(event.source.user_id, "r"+str(random.randint(1,10))).decode())
+        restaurant = json.loads(redisDB.hget(event.source.user_id, "r"+str(random.randint(1,10))).decode())
         message = generate_restaurant_button_message(restaurant)
 
         lineBotApi.reply_message(
@@ -138,7 +138,7 @@ def handle_location_message(event):
     restaurants["remainingRestaurants"] = len(nearbyResults)
     for i in range(len(nearbyResults)):
         restaurants["r"+str(i+1)] = json.dumps(nearbyResults[i])
-    r.hmset(event.source.user_id, restaurants)
+    redisDB.hmset(event.source.user_id, restaurants)
     
     # restaurant = random.choice(nearbyResults)
 
@@ -166,7 +166,7 @@ def handle_location_message(event):
             alt_text = "用屁電腦rrrrr",
             template = CarouselTemplate(columns = generate_carousel_columns(columnAmount, restaurants))
         )
-        r.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
+        redisDB.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
     else:
         message = TextSendMessage(text = "你家住海邊？")
     
@@ -255,7 +255,7 @@ def generate_restaurant_button_message(restaurant):
     return buttons_template
 
 def prepareCarousel(userId):
-    restaurantsInfo = json.loads(r.hget(userId).decode())
+    restaurantsInfo = json.loads(redisDB.hget(userId).decode())
     remainingRestaurants = int(restaurantsInfo.pop("remainingRestaurants"))
     restaurants = []
     for r in list(restaurantsInfo.values())[-remainingRestaurants:]:
