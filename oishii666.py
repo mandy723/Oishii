@@ -255,7 +255,7 @@ def generate_restaurant_button_message(restaurant):
     return buttons_template
 
 def prepareCarousel(userId):
-    restaurantsInfo = json.loads(redisDB.hget(userId).decode())
+    restaurantsInfo = json.loads(redisDB.hgetall(userId).decode())
     remainingRestaurants = int(restaurantsInfo.pop("remainingRestaurants"))
     restaurants = []
     for r in list(restaurantsInfo.values())[-remainingRestaurants:]:
