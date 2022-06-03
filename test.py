@@ -8,9 +8,9 @@ b = [4, 5, 6, 7, 8, 9, 10, 11, 12]
 # a["a"] += b
 index = 3
 # print(a.values())
-c = []
-for b in list(a.values())[-index:]:
-    c.append(b)
+c = [(1, 2, 3), ("a", "b", "c"), (5, 6, 7)]
+# for b in list(a.values())[-index:]:
+#     c.append(b)
 
-print(c)
+print(c[1][2])
 # print(type(json.dumps(a)))

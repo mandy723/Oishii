@@ -255,14 +255,15 @@ def generate_restaurant_button_message(restaurant):
     return buttons_template
 
 def prepareCarousel(userId):
-    # restaurantsInfo = redisDB.hgetall(userId)
     restaurantsInfo = { key.decode(): val.decode() for key, val in redisDB.hgetall(userId).items() }
     remainingRestaurants = int(restaurantsInfo.pop(("remainingRestaurants")))
     restaurants = []
-    for r in list(restaurantsInfo.values())[-remainingRestaurants:]:
-        restaurants.append(json.loads(r))
     
-    restaurants.sort(key = lambda s: s["rating"], reverse=True)
+    sortedRestaurants = sorted(restaurantsInfo.items(), key = lambda x: x[1])
+
+    for r in sortedRestaurants[-remainingRestaurants:]:
+        restaurants.append(json.loads(r[1]))
+    
     print(restaurants)
     
     return (remainingRestaurants, restaurants)
