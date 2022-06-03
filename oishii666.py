@@ -101,7 +101,7 @@ def pretty_echo(event):
             )
         
     elif event.message.text.lower() == "隨便吃":
-        restaurant = json.loads(redisDB.hget(event.source.user_id, "r"+str(random.randint(1,10))).decode())
+        restaurant = json.loads(redisDB.hget(event.source.user_id, str(random.randint(1,10))).decode())
         message = generate_restaurant_button_message(restaurant)
 
         lineBotApi.reply_message(
@@ -137,7 +137,7 @@ def handle_location_message(event):
     restaurants = {}
     restaurants["remainingRestaurants"] = len(nearbyResults)
     for i in range(len(nearbyResults)):
-        restaurants["r"+str(i+1)] = json.dumps(nearbyResults[i])
+        restaurants[str(i+1)] = json.dumps(nearbyResults[i])
     redisDB.hmset(event.source.user_id, restaurants)
     
     # restaurant = random.choice(nearbyResults)
@@ -259,7 +259,7 @@ def prepareCarousel(userId):
     remainingRestaurants = int(restaurantsInfo.pop(("remainingRestaurants")))
     restaurants = []
     
-    sortedRestaurants = sorted(restaurantsInfo.items(), key = lambda x: x[0])
+    sortedRestaurants = sorted(restaurantsInfo.items(), key = lambda x: int(x[0]))
 
     for r in sortedRestaurants[-remainingRestaurants:]:
         restaurants.append(json.loads(r[1]))

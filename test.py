@@ -3,7 +3,7 @@ import json
 
 # sorted(restaurantsInfo.items(), key = lambda x: x[1])
 
-a = {"r2": 1, "r1": 8, "r4": 3, "r3": 4, "r5": 5, "r8": 0, "r0": -1}
+a = {"r2": 1, "r1": 8, "r4": 3, "r35": 4, "r3": 5, "r8": 0, "r10": -1}
 a = sorted(a.items(), key = lambda x: x[0])
 
 print(a)
