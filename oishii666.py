@@ -193,27 +193,27 @@ def generate_carousel_columns(columnAmount, restaurants):
     carouselColumns = []
     
     for i in range(columnAmount):
-        if restaurants[0].get("photos") is None:
+        if restaurants[i].get("photos") is None:
             thumbnailImageUrl = None
         else:
-            photoReference = restaurants[0]["photos"][0]["photo_reference"]
+            photoReference = restaurants[i]["photos"][0]["photo_reference"]
             thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
             
-        rating = "無" if restaurants[0].get("rating") is None or restaurants[0]["rating"] == 0.0 else restaurants[0]["rating"]
-        address = "沒有資料" if restaurants[0].get("vicinity") is None else restaurants[0]["vicinity"]
+        rating = "無" if restaurants[i].get("rating") is None or restaurants[i]["rating"] == 0.0 else restaurants[i]["rating"]
+        address = "沒有資料" if restaurants[i].get("vicinity") is None else restaurants[i]["vicinity"]
         
-        userRatingsTotal = "0" if restaurants[0].get("user_ratings_total") is None else restaurants[0]["user_ratings_total"]
+        userRatingsTotal = "0" if restaurants[i].get("user_ratings_total") is None else restaurants[i]["user_ratings_total"]
         column = CarouselColumn(
                     thumbnail_image_url = thumbnailImageUrl,
-                    title = restaurants[0]["name"][:40],
+                    title = restaurants[i]["name"][:40],
                     text = f"評分：{rating}\n評論數：{userRatingsTotal}\n地址：{address}"[:60],
                     actions = [
                         URITemplateAction(
                             label = '查看地圖',
                             uri = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={placeId}".format(
-                                lat = restaurants[0]["geometry"]["location"]["lat"],
-                                long = restaurants[0]["geometry"]["location"]["lng"],
-                                placeId = restaurants[0]["place_id"]
+                                lat = restaurants[i]["geometry"]["location"]["lat"],
+                                long = restaurants[i]["geometry"]["location"]["lng"],
+                                placeId = restaurants[i]["place_id"]
                             )
                         ),
                     ]
@@ -255,13 +255,16 @@ def generate_restaurant_button_message(restaurant):
     return buttons_template
 
 def prepareCarousel(userId):
-    restaurantsInfo = redisDB.hgetall(userId)
-    print("infooooooooooooooooo", restaurantsInfo)
-    remainingRestaurants = int(restaurantsInfo.pop(("remainingRestaurants").encode()).decode())
+    # restaurantsInfo = redisDB.hgetall(userId)
+    restaurantsInfo = { key.decode(): val.decode() for key, val in redisDB.hgetall(userId).items() }
+    remainingRestaurants = int(restaurantsInfo.pop(("remainingRestaurants")))
     restaurants = []
     for r in list(restaurantsInfo.values())[-remainingRestaurants:]:
-        restaurants.append(json.loads(r.decode()))
-        
+        restaurants.append(json.loads(r))
+    
+    restaurants.sort(key = lambda s: s["rating"], reverse=True)
+    print(restaurants)
+    
     return (remainingRestaurants, restaurants)
 
 if __name__ == "__main__":
