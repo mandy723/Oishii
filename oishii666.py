@@ -31,8 +31,6 @@ r = redis.Redis(
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 GOOGLE_API_KEY = "AIzaSyABoNMQEdhfPSZexPLgkglXjXz6nRrqDxU"
 
-nearbyResults = {}
-# {"ID":"nearbyResults"}
 
 # LINE 聊天機器人的基本資料
 config = configparser.ConfigParser()
@@ -84,13 +82,16 @@ def pretty_echo(event):
             )
         
     elif event.message.text == "I want more restaurants":
-        restaurantsAmount = 10 if len(nearbyResults[event.source.user_id]) >= 10 else len(nearbyResults[event.source.user_id])
+        remainingRestaurants, restaurants = prepareCarousel(event.source.user_id)
+        columnAmount = 10 if remainingRestaurants >= 10 else remainingRestaurants
 
-        if restaurantsAmount:
+        if columnAmount:
             message = TemplateSendMessage(
                 alt_text = "用屁電腦rrrrr",
-                template = CarouselTemplate(columns = generate_carousel_columns(restaurantsAmount, nearbyResults[event.source.user_id]))
+                template = CarouselTemplate(columns = generate_carousel_columns(columnAmount, restaurants))
             )
+            r.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
+        
         else:
             message = TextSendMessage(text = "Please send location first")
 
@@ -117,7 +118,7 @@ def handle_location_message(event):
     nearbyUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={GOOGLE_API_KEY}&location={lat},{long}&radius={radius}&type=restaurant&language=zh-TW"
 
     results = requests.get(nearbyUrl).json()
-    nearbyResults[event.source.user_id] = results["results"]
+    nearbyResults = results["results"]
     
     for i in range(2):  
         time.sleep(3)
@@ -127,16 +128,16 @@ def handle_location_message(event):
         nextPageToken = results['next_page_token'] 
         nextPageUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={nextPageToken}&key={GOOGLE_API_KEY}&language=zh-TW"
         results = requests.get(nextPageUrl).json()
-        nearbyResults[event.source.user_id] += results["results"]
+        nearbyResults += results["results"]
         
-    for i in nearbyResults[event.source.user_id]:
+    for i in nearbyResults:
         if i.get("rating") is None:
             i["rating"] = 0.0
-    nearbyResults[event.source.user_id].sort(key = lambda s: s["rating"], reverse=True)
-
+    nearbyResults.sort(key = lambda s: s["rating"], reverse=True)
     restaurants = {}
-    for i in range(len(nearbyResults[event.source.user_id])):
-        restaurants["r"+str(i+1)] = json.dumps(nearbyResults[event.source.user_id][i])
+    restaurants["remainingRestaurants"] = len(nearbyResults)
+    for i in range(len(nearbyResults)):
+        restaurants["r"+str(i+1)] = json.dumps(nearbyResults[i])
     r.hmset(event.source.user_id, restaurants)
     
     # restaurant = random.choice(nearbyResults)
@@ -156,17 +157,19 @@ def handle_location_message(event):
     #         ]
     #     )
     # )
-
-    restaurantsAmount = 10 if len(nearbyResults[event.source.user_id]) >= 10 else len(nearbyResults[event.source.user_id])
-
-    if restaurantsAmount:
+    
+    remainingRestaurants, restaurants = prepareCarousel(event.source.user_id)
+    columnAmount = 10 if remainingRestaurants >= 10 else remainingRestaurants
+    
+    if columnAmount:
         message = TemplateSendMessage(
             alt_text = "用屁電腦rrrrr",
-            template = CarouselTemplate(columns = generate_carousel_columns(restaurantsAmount, nearbyResults[event.source.user_id]))
+            template = CarouselTemplate(columns = generate_carousel_columns(columnAmount, restaurants))
         )
+        r.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
     else:
         message = TextSendMessage(text = "你家住海邊？")
-
+    
     buttonsTemplateMessage = TemplateSendMessage(
         alt_text = "Wanna to see more?",
         template = ButtonsTemplate(
@@ -186,10 +189,10 @@ def handle_location_message(event):
             event.reply_token, messageList
         )
     
-def generate_carousel_columns(restaurantsAmount, restaurants):
+def generate_carousel_columns(columnAmount, restaurants):
     carouselColumns = []
     
-    for i in range(restaurantsAmount):
+    for i in range(columnAmount):
         if restaurants[0].get("photos") is None:
             thumbnailImageUrl = None
         else:
@@ -216,7 +219,6 @@ def generate_carousel_columns(restaurantsAmount, restaurants):
                     ]
                 )
         carouselColumns.append(column)
-        restaurants.pop(0)
 
     return carouselColumns
 
@@ -251,6 +253,15 @@ def generate_restaurant_button_message(restaurant):
         )
     )
     return buttons_template
+
+def prepareCarousel(userId):
+    restaurantsInfo = json.loads(r.hget(userId).decode())
+    remainingRestaurants = int(restaurantsInfo.pop("remainingRestaurants"))
+    restaurants = []
+    for r in list(restaurantsInfo.values())[-remainingRestaurants:]:
+        restaurants.append(json.loads(r))
+        
+    return (remainingRestaurants, restaurants)
 
 if __name__ == "__main__":
     app.run()
