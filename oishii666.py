@@ -259,7 +259,7 @@ def prepareCarousel(userId):
     remainingRestaurants = int(restaurantsInfo.pop(("remainingRestaurants")))
     restaurants = []
     
-    sortedRestaurants = sorted(restaurantsInfo.items(), key = lambda x: x[1])
+    sortedRestaurants = sorted(restaurantsInfo.items(), key = lambda x: x[0])
 
     for r in sortedRestaurants[-remainingRestaurants:]:
         restaurants.append(json.loads(r[1]))
