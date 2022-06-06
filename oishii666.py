@@ -109,6 +109,37 @@ def pretty_echo(event):
             lineBotApi.reply_message(
                 event.reply_token, messageList
             )
+        
+    elif event.message.text == "看更多餐廳":
+        remainingRestaurants, restaurants = prepareCarousel(event.source.user_id)
+        columnAmount = 10 if remainingRestaurants >= 10 else remainingRestaurants
+
+        if columnAmount:
+            message = TemplateSendMessage(
+                alt_text = "用屁電腦rrrrr",
+                template = CarouselTemplate(columns = generate_carousel_columns(columnAmount, restaurants))
+            )
+            redisDB.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
+        
+            buttonsTemplateMessage = TemplateSendMessage(
+                alt_text = "用屁電腦rrrrr",
+                template = ButtonsTemplate(
+                    text = "沒有你想吃的嗎？",
+                    actions = [
+                        MessageTemplateAction(
+                            label= "看更多餐廳",
+                            text= "看更多餐廳"
+                        )
+                    ]
+                )
+            )
+
+            messageList = [message, buttonsTemplateMessage]
+
+            lineBotApi.reply_message(
+                event.reply_token,
+                messageList
+            )
         else:
             message = TemplateSendMessage(
                 alt_text = "用屁電腦rrrrr",
@@ -127,25 +158,6 @@ def pretty_echo(event):
                 event.reply_token,
                 message
             )
-        
-    elif event.message.text == "看更多餐廳":
-        remainingRestaurants, restaurants = prepareCarousel(event.source.user_id)
-        columnAmount = 10 if remainingRestaurants >= 10 else remainingRestaurants
-
-        if columnAmount:
-            message = TemplateSendMessage(
-                alt_text = "用屁電腦rrrrr",
-                template = CarouselTemplate(columns = generate_carousel_columns(columnAmount, restaurants))
-            )
-            redisDB.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
-        
-        else:
-            message = TextSendMessage(text = "Please send location first")
-
-        lineBotApi.reply_message(
-            event.reply_token,
-            message
-        )
         
     elif event.message.text.lower() == "隨便吃":
         restaurant = json.loads(redisDB.hget(event.source.user_id, str(random.randint(1,10))).decode())
@@ -166,47 +178,62 @@ def handle_location_message(event):
 
     results = requests.get(nearbyUrl).json()
     nearbyResults = results["results"]
-    
-    for i in range(2):  
-        time.sleep(3)
-        if "next_page_token" not in results:
-            break
-    
-        nextPageToken = results['next_page_token'] 
-        nextPageUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={nextPageToken}&key={GOOGLE_API_KEY}&language=zh-TW"
-        results = requests.get(nextPageUrl).json()
-        nearbyResults += results["results"]
-        
-    for i in nearbyResults:
-        if i.get("rating") is None:
-            i["rating"] = 0.0
-    nearbyResults.sort(key = lambda s: s["rating"], reverse=True)
-    restaurants = {}
-    restaurants["remainingRestaurants"] = len(nearbyResults)
-    for i in range(len(nearbyResults)):
-        restaurants[str(i+1)] = json.dumps(nearbyResults[i])
-    redisDB.hmset(event.source.user_id, restaurants)
 
-    optionsMessage = TemplateSendMessage(
-        alt_text = "用屁電腦rrrrr",
-        template = ButtonsTemplate(
-            text = "想怎麼吃？",
-            actions = [
-                MessageTemplateAction(
-                    label= "隨便吃!",
-                    text= "隨便吃"
-                ),
-                MessageTemplateAction(
-                    label= "我要吃十家!",
-                    text= "我要吃十家"
-                ),
-                MessageTemplateAction(
-                    label= "更新當前地址",
-                    text= "oishii"
-                )
-            ]
+    if nearbyResults:
+        for i in range(2):  
+            time.sleep(3)
+            if "next_page_token" not in results:
+                break
+        
+            nextPageToken = results['next_page_token'] 
+            nextPageUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={nextPageToken}&key={GOOGLE_API_KEY}&language=zh-TW"
+            results = requests.get(nextPageUrl).json()
+            nearbyResults += results["results"]
+            
+        for i in nearbyResults:
+            if i.get("rating") is None:
+                i["rating"] = 0.0
+        nearbyResults.sort(key = lambda s: s["rating"], reverse=True)
+        restaurants = {}
+        restaurants["remainingRestaurants"] = len(nearbyResults)
+        for i in range(len(nearbyResults)):
+            restaurants[str(i+1)] = json.dumps(nearbyResults[i])
+        redisDB.hmset(event.source.user_id, restaurants)
+
+        optionsMessage = TemplateSendMessage(
+            alt_text = "用屁電腦rrrrr",
+            template = ButtonsTemplate(
+                text = "想怎麼吃？",
+                actions = [
+                    MessageTemplateAction(
+                        label= "隨便吃!",
+                        text= "隨便吃"
+                    ),
+                    MessageTemplateAction(
+                        label= "我要吃十家!",
+                        text= "我要吃十家"
+                    ),
+                    MessageTemplateAction(
+                        label= "更新當前地址",
+                        text= "oishii"
+                    )
+                ]
+            )
         )
-    )
+
+    else:
+        optionsMessage = TemplateSendMessage(
+            alt_text = "用屁電腦rrrrr",
+            template = ButtonsTemplate(
+                text = "你家住海邊？",
+                actions = [
+                    MessageTemplateAction(
+                        label= "換個位置",
+                        text= "oishii"
+                    ),
+                ]
+            )
+        )
 
     lineBotApi.reply_message(
         event.reply_token,
