@@ -63,12 +63,12 @@ def pretty_echo(event):
         
     if event.message.text.lower() == "oishii":
         buttonsTemplateMessage = TemplateSendMessage(
-        alt_text = "Please tell me where you are",
+        alt_text = "你在哪ㄦ",
         template = ButtonsTemplate(
-            text = "Please tell me where you are",
+            text = "你在哪ㄦ",
             actions = [
                 URITemplateAction(
-                    label = "Send my location",
+                    label = "傳送地址",
                     uri = "line://nv/location"
                     )
                 ]
@@ -81,33 +81,52 @@ def pretty_echo(event):
         )
 
     elif event.message.text == "我要吃十家":
-        remainingRestaurants, restaurants = prepareCarousel(event.source.user_id)
-        columnAmount = 10 if remainingRestaurants >= 10 else remainingRestaurants
-        
-        if columnAmount:
+        if redisDB.exists(event.source.user_id):
+            remainingRestaurants, restaurants = prepareCarousel(event.source.user_id)
+            columnAmount = 10 if remainingRestaurants >= 10 else remainingRestaurants
+            
+            if columnAmount:
+                message = TemplateSendMessage(
+                    alt_text = "用屁電腦rrrrr",
+                    template = CarouselTemplate(columns = generate_carousel_columns(columnAmount, restaurants))
+                )
+                redisDB.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
+
+                buttonsTemplateMessage = TemplateSendMessage(
+                alt_text = "用屁電腦rrrrr",
+                template = ButtonsTemplate(
+                    text = "沒有你想吃的嗎？",
+                    actions = [
+                        MessageTemplateAction(
+                            label= "看更多餐廳",
+                            text= "看更多餐廳"
+                            )
+                        ]
+                    )
+                )
+            
+                messageList = [message, buttonsTemplateMessage]
+                
+                lineBotApi.reply_message(
+                    event.reply_token, messageList
+                )
+        else:
             message = TemplateSendMessage(
                 alt_text = "用屁電腦rrrrr",
-                template = CarouselTemplate(columns = generate_carousel_columns(columnAmount, restaurants))
-            )
-            redisDB.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
-
-            buttonsTemplateMessage = TemplateSendMessage(
-            alt_text = "用屁電腦rrrrr",
-            template = ButtonsTemplate(
-                text = "沒有你想吃的嗎？",
-                actions = [
-                    MessageTemplateAction(
-                        label= "Yes!",
-                        text= "看更多餐廳"
-                        )
+                template = ButtonsTemplate(
+                    text = "你在哪？讓我看看！",
+                    actions = [
+                        MessageTemplateAction(
+                            label= "更新當前地址",
+                            text= "oishii"
+                        ),
                     ]
                 )
             )
-        
-            messageList = [message, buttonsTemplateMessage]
-            
+
             lineBotApi.reply_message(
-                event.reply_token, messageList
+                event.reply_token,
+                message
             )
         
     elif event.message.text == "看更多餐廳":
@@ -160,13 +179,58 @@ def pretty_echo(event):
             )
         
     elif event.message.text.lower() == "隨便吃":
-        restaurant = json.loads(redisDB.hget(event.source.user_id, str(random.randint(1,10))).decode())
-        message = generate_restaurant_button_message(restaurant)
+        if redisDB.exists(event.source.user_id):
+            restaurant = json.loads(redisDB.hget(event.source.user_id, str(random.randint(1,10))).decode())
+            message = generate_restaurant_button_message(restaurant)
 
-        lineBotApi.reply_message(
-            event.reply_token,
-            message
-        )
+            optionsMessage = TemplateSendMessage(
+                alt_text = "用屁電腦rrrrr",
+                template = ButtonsTemplate(
+                    text = "還想怎麼吃？",
+                    actions = [
+                        MessageTemplateAction(
+                            label= "隨便吃!",
+                            text= "隨便吃"
+                        ),
+                        MessageTemplateAction(
+                            label= "我要吃十家!",
+                            text= "我要吃十家"
+                        ),
+                        MessageTemplateAction(
+                            label= "更新當前地址",
+                            text= "oishii"
+                        )
+                    ]
+                )
+            )
+
+            lineBotApi.reply_message(
+                event.reply_token,
+                message
+            )
+
+            lineBotApi.reply_message(
+                event.reply_token,
+                optionsMessage
+            )
+        else:
+            message = TemplateSendMessage(
+                alt_text = "用屁電腦rrrrr",
+                template = ButtonsTemplate(
+                    text = "你在哪？讓我看看！",
+                    actions = [
+                        MessageTemplateAction(
+                            label= "更新當前地址",
+                            text= "oishii"
+                        ),
+                    ]
+                )
+            )
+
+            lineBotApi.reply_message(
+                event.reply_token,
+                message
+            )
 
 @handler.add(MessageEvent, message = LocationMessage)
 def handle_location_message(event):
@@ -314,9 +378,7 @@ def prepareCarousel(userId):
 
     for r in sortedRestaurants[-remainingRestaurants:]:
         restaurants.append(json.loads(r[1]))
-    
-    print(restaurants)
-    
+        
     return (remainingRestaurants, restaurants)
 
 if __name__ == "__main__":
