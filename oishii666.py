@@ -204,14 +204,11 @@ def pretty_echo(event):
                 )
             )
 
-            lineBotApi.reply_message(
-                event.reply_token,
-                message
-            )
+            messageList = [message, optionsMessage]
 
             lineBotApi.reply_message(
                 event.reply_token,
-                optionsMessage
+                messageList
             )
         else:
             message = TemplateSendMessage(
