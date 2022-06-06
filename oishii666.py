@@ -116,10 +116,10 @@ def pretty_echo(event):
                 template = ButtonsTemplate(
                     text = "你在哪？讓我看看！",
                     actions = [
-                        MessageTemplateAction(
-                            label= "更新當前地址",
-                            text= "oishii"
-                        ),
+                        URITemplateAction(
+                            label = "傳送地址",
+                            uri = "line://nv/location"
+                        )
                     ]
                 )
             )
