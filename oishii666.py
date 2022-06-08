@@ -1,18 +1,12 @@
-from __future__ import unicode_literals
 import os
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage,
+    MessageEvent, TextMessage,
     LocationMessage,
-    TemplateSendMessage,
-    MessageTemplateAction,
-    ButtonsTemplate,
-    URITemplateAction,
-    CarouselTemplate,
-    CarouselColumn,
 )
+from lineBotMessageBuilder import LineBotMessageBuilder
 import redis
 import json
 import configparser
@@ -57,27 +51,19 @@ def callback():
     return 'OK'
 
 @handler.add(MessageEvent, message = TextMessage)
-def pretty_echo(event):
-    
+def handle_text_message(event):
     # if event.source.user_id != "Udeadbeefdeadbeefdeadbeefdeadbeef":
-        
+    
+    messageBuilder = LineBotMessageBuilder()
     if event.message.text.lower() == "oishii":
-        buttonsTemplateMessage = TemplateSendMessage(
-        alt_text = "你在哪ㄦ",
-        template = ButtonsTemplate(
-            text = "你在哪ㄦ",
-            actions = [
-                URITemplateAction(
-                    label = "傳送地址",
-                    uri = "line://nv/location"
-                    )
-                ]
-            )
-        )
+        messageBuilder.start_building_template_message(alt_text="你在哪ㄦ")
+        messageBuilder.add_button_template(text="你在哪ㄦ")
+        messageBuilder.add_uri_template_action(label="傳送地址", uri="line://nv/location")
+        message = messageBuilder.build()
 
         lineBotApi.reply_message(
             event.reply_token,
-            buttonsTemplateMessage
+            message
         )
 
     elif event.message.text == "我要吃十家":
@@ -86,43 +72,25 @@ def pretty_echo(event):
             columnAmount = 10 if remainingRestaurants >= 10 else remainingRestaurants
             
             if columnAmount:
-                message = TemplateSendMessage(
-                    alt_text = "用屁電腦rrrrr",
-                    template = CarouselTemplate(columns = generate_carousel_columns(columnAmount, restaurants))
-                )
                 redisDB.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
 
-                buttonsTemplateMessage = TemplateSendMessage(
-                alt_text = "用屁電腦rrrrr",
-                template = ButtonsTemplate(
-                    text = "沒有你想吃的嗎？",
-                    actions = [
-                        MessageTemplateAction(
-                            label= "看更多餐廳",
-                            text= "看更多餐廳"
-                            )
-                        ]
-                    )
-                )
+                restaurantMessage = generate_restaurant_carousel_message(columnAmount, restaurants)
+
+                messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+                messageBuilder.add_button_template(text = "沒有你想吃的嗎？")
+                messageBuilder.add_message_template_action(label = "看更多餐廳", text = "看更多餐廳")
+                seeMoreRestaurantMessage = messageBuilder.build()
             
-                messageList = [message, buttonsTemplateMessage]
+                messageList = [restaurantMessage, seeMoreRestaurantMessage]
                 
                 lineBotApi.reply_message(
                     event.reply_token, messageList
                 )
         else:
-            message = TemplateSendMessage(
-                alt_text = "用屁電腦rrrrr",
-                template = ButtonsTemplate(
-                    text = "你在哪？讓我看看！",
-                    actions = [
-                        URITemplateAction(
-                            label = "傳送地址",
-                            uri = "line://nv/location"
-                        )
-                    ]
-                )
-            )
+            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.add_button_template(text = "你在哪？讓我看看！")
+            messageBuilder.add_uri_template_action(label = "傳送地址", uri = "line://nv/location")
+            message = messageBuilder.build()
 
             lineBotApi.reply_message(
                 event.reply_token,
@@ -134,44 +102,26 @@ def pretty_echo(event):
         columnAmount = 10 if remainingRestaurants >= 10 else remainingRestaurants
 
         if columnAmount:
-            message = TemplateSendMessage(
-                alt_text = "用屁電腦rrrrr",
-                template = CarouselTemplate(columns = generate_carousel_columns(columnAmount, restaurants))
-            )
             redisDB.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
-        
-            buttonsTemplateMessage = TemplateSendMessage(
-                alt_text = "用屁電腦rrrrr",
-                template = ButtonsTemplate(
-                    text = "沒有你想吃的嗎？",
-                    actions = [
-                        MessageTemplateAction(
-                            label= "看更多餐廳",
-                            text= "看更多餐廳"
-                        )
-                    ]
-                )
-            )
 
-            messageList = [message, buttonsTemplateMessage]
+            restaurantMessage = generate_restaurant_carousel_message(columnAmount, restaurants)
+        
+            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.add_button_template(text = "沒有你想吃的嗎？")
+            messageBuilder.add_message_template_action(label = "看更多餐廳", text = "看更多餐廳")
+            seeMoreRestaurantMessage = messageBuilder.build()
+
+            messageList = [restaurantMessage, seeMoreRestaurantMessage]
 
             lineBotApi.reply_message(
                 event.reply_token,
                 messageList
             )
         else:
-            message = TemplateSendMessage(
-                alt_text = "用屁電腦rrrrr",
-                template = ButtonsTemplate(
-                    text = "已經沒有更多餐廳了，還是不知道吃什麼嗎？",
-                    actions = [
-                        MessageTemplateAction(
-                            label= "更新當前地址",
-                            text= "oishii"
-                        ),
-                    ]
-                )
-            )
+            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.add_button_template(text = "已經沒有更多餐廳了，還是不知道吃什麼嗎？")
+            messageBuilder.add_message_template_action(label = "更新當前地址", text = "oishii")
+            message = messageBuilder.build()
 
             lineBotApi.reply_message(
                 event.reply_token,
@@ -183,26 +133,12 @@ def pretty_echo(event):
             restaurant = json.loads(redisDB.hget(event.source.user_id, str(random.randint(1,10))).decode())
             message = generate_restaurant_button_message(restaurant)
 
-            optionsMessage = TemplateSendMessage(
-                alt_text = "用屁電腦rrrrr",
-                template = ButtonsTemplate(
-                    text = "還想怎麼吃？",
-                    actions = [
-                        MessageTemplateAction(
-                            label= "隨便吃!",
-                            text= "隨便吃"
-                        ),
-                        MessageTemplateAction(
-                            label= "我要吃十家!",
-                            text= "我要吃十家"
-                        ),
-                        MessageTemplateAction(
-                            label= "更新當前地址",
-                            text= "oishii"
-                        )
-                    ]
-                )
-            )
+            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.add_button_template(text = "還想怎麼吃？")
+            messageBuilder.add_message_template_action(label = "隨便吃!", text = "隨便吃")
+            messageBuilder.add_message_template_action(label = "我要吃十家!", text = "我要吃十家")
+            messageBuilder.add_message_template_action(label = "更新當前地址", text = "oishii")
+            optionsMessage = messageBuilder.build()
 
             messageList = [message, optionsMessage]
 
@@ -211,18 +147,10 @@ def pretty_echo(event):
                 messageList
             )
         else:
-            message = TemplateSendMessage(
-                alt_text = "用屁電腦rrrrr",
-                template = ButtonsTemplate(
-                    text = "你在哪？讓我看看！",
-                    actions = [
-                        URITemplateAction(
-                            label = "傳送地址",
-                            uri = "line://nv/location"
-                        )
-                    ]
-                )
-            )
+            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.add_button_template(text = "你在哪？讓我看看！")
+            messageBuilder.add_uri_template_action(label = "傳送地址", uri = "line://nv/location")
+            message = messageBuilder.build()
 
             lineBotApi.reply_message(
                 event.reply_token,
@@ -239,6 +167,7 @@ def handle_location_message(event):
 
     results = requests.get(nearbyUrl).json()
     nearbyResults = results["results"]
+    messageBuilder = LineBotMessageBuilder()
 
     if nearbyResults:
         for i in range(2):  
@@ -261,48 +190,28 @@ def handle_location_message(event):
             restaurants[str(i+1)] = json.dumps(nearbyResults[i])
         redisDB.hmset(event.source.user_id, restaurants)
 
-        optionsMessage = TemplateSendMessage(
-            alt_text = "用屁電腦rrrrr",
-            template = ButtonsTemplate(
-                text = "想怎麼吃？",
-                actions = [
-                    MessageTemplateAction(
-                        label= "隨便吃!",
-                        text= "隨便吃"
-                    ),
-                    MessageTemplateAction(
-                        label= "我要吃十家!",
-                        text= "我要吃十家"
-                    ),
-                    MessageTemplateAction(
-                        label= "更新當前地址",
-                        text= "oishii"
-                    )
-                ]
-            )
-        )
+        messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+        messageBuilder.add_button_template(text = "想怎麼吃？")
+        messageBuilder.add_message_template_action(label = "隨便吃!", text = "隨便吃")
+        messageBuilder.add_message_template_action(label = "我要吃十家!", text = "我要吃十家")
+        messageBuilder.add_message_template_action(label = "更新當前地址", text = "oishii")
+        message = messageBuilder.build()
 
     else:
-        optionsMessage = TemplateSendMessage(
-            alt_text = "用屁電腦rrrrr",
-            template = ButtonsTemplate(
-                text = "你家住海邊？",
-                actions = [
-                    MessageTemplateAction(
-                        label= "換個位置",
-                        text= "oishii"
-                    ),
-                ]
-            )
-        )
+        messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+        messageBuilder.add_button_template(text = "你家住海邊？")
+        messageBuilder.add_message_template_action(label = "換個位置", text = "oishii")
+        message = messageBuilder.build()
 
     lineBotApi.reply_message(
         event.reply_token,
-        optionsMessage
+        message
     )
     
-def generate_carousel_columns(columnAmount, restaurants):
-    carouselColumns = []
+def generate_restaurant_carousel_message(columnAmount, restaurants):
+    messageBuilder = LineBotMessageBuilder()
+    messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+    messageBuilder.start_building_carousel_template()
     
     for i in range(columnAmount):
         if restaurants[i].get("photos") is None:
@@ -315,24 +224,23 @@ def generate_carousel_columns(columnAmount, restaurants):
         address = "沒有資料" if restaurants[i].get("vicinity") is None else restaurants[i]["vicinity"]
         
         userRatingsTotal = "0" if restaurants[i].get("user_ratings_total") is None else restaurants[i]["user_ratings_total"]
-        column = CarouselColumn(
-                    thumbnail_image_url = thumbnailImageUrl,
-                    title = restaurants[i]["name"][:40],
-                    text = f"評分：{rating}\n評論數：{userRatingsTotal}\n地址：{address}"[:60],
-                    actions = [
-                        URITemplateAction(
-                            label = '查看地圖',
-                            uri = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={placeId}".format(
-                                lat = restaurants[i]["geometry"]["location"]["lat"],
-                                long = restaurants[i]["geometry"]["location"]["lng"],
-                                placeId = restaurants[i]["place_id"]
-                            )
-                        ),
-                    ]
-                )
-        carouselColumns.append(column)
 
-    return carouselColumns
+        messageBuilder.add_carousel_column(
+            title = restaurants[i]["name"][:40],
+            text = f"評分：{rating}\n評論數：{userRatingsTotal}\n地址：{address}"[:60],
+            thumbnail_image_url = thumbnailImageUrl,
+        )
+        messageBuilder.add_uri_template_action(
+            label = '查看地圖',
+            uri = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={placeId}".format(
+                lat = restaurants[i]["geometry"]["location"]["lat"],
+                long = restaurants[i]["geometry"]["location"]["lng"],
+                placeId = restaurants[i]["place_id"]
+            )
+        )
+
+    messageBuilder.end_building_carousel_template()
+    return messageBuilder.build()
 
 def generate_restaurant_button_message(restaurant):
     if restaurant.get("photos") is None:
@@ -346,25 +254,23 @@ def generate_restaurant_button_message(restaurant):
     
     userRatingsTotal = "0" if restaurant.get("user_ratings_total") is None else restaurant["user_ratings_total"]
 
-    buttons_template = TemplateSendMessage(
-        alt_text = 'Please use mobile phone to check the message',
-        template = ButtonsTemplate(
-            title = restaurant["name"][:40],
-            text = f"評分：{rating}\n評論數：{userRatingsTotal}\n地址：{address}"[:60],
-            thumbnail_image_url = thumbnailImageUrl,
-            actions = [
-                URITemplateAction(
-                    label = '查看地圖',
-                    uri = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={placeId}".format(
-                        lat = restaurant["geometry"]["location"]["lat"],
-                        long = restaurant["geometry"]["location"]["lng"],
-                        placeId = restaurant["place_id"]
-                    )
-                ),
-            ]
+    messageBuilder = LineBotMessageBuilder()
+    messageBuilder.start_building_template_message("請使用手機版查看訊息呦～")
+    messageBuilder.add_button_template(
+        title = restaurant["name"][:40],
+        text = f"評分：{rating}\n評論數：{userRatingsTotal}\n地址：{address}"[:60],
+        thumbnail_image_url = thumbnailImageUrl
+    )
+    messageBuilder.add_uri_template_action(
+        label = '查看地圖',
+        uri = "https://www.google.com/maps/search/?api=1&query={lat},{long}&query_place_id={placeId}".format(
+            lat = restaurant["geometry"]["location"]["lat"],
+            long = restaurant["geometry"]["location"]["lng"],
+            placeId = restaurant["place_id"]
         )
     )
-    return buttons_template
+    
+    return messageBuilder.build()
 
 def prepareCarousel(userId):
     restaurantsInfo = { key.decode(): val.decode() for key, val in redisDB.hgetall(userId).items() }
