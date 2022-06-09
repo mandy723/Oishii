@@ -215,7 +215,8 @@ def generate_restaurant_carousel_message(columnAmount, restaurants):
     
     for i in range(columnAmount):
         if restaurants[i].get("photos") is None:
-            thumbnailImageUrl = None
+            # thumbnailImageUrl = None
+            thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key=AIzaSyABoNMQEdhfPSZexPLgkglXjXz6nRrqDxU&photoreference=Aap_uEBn3U5zegcaLypOF7kx_c5d--0Y_29zsCtldLpkAamaXl_IcZyNus2yaXzfAsonCEZVgZXY54lGecYmV7Xo925OXOcXT8pmmLbrd7cyrvZZ4BTT10wMdAcN85Rm9XCaig_p6FH9ZXNNoBwrGbH5lKWhzkk6JOMQgfPov6Jq_ctVlyco&maxwidth=1024"
         else:
             photoReference = restaurants[i]["photos"][0]["photo_reference"]
             thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
