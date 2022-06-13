@@ -185,10 +185,14 @@ def handle_location_message(event):
             if i.get("rating") is None:
                 i["rating"] = 0.0
         # nearbyResults.sort(key = lambda s: s["rating"], reverse=True)
+        print("=====below is nearbyResults======")
+        print(nearbyResults)
         restaurants = {}
         restaurants["remainingRestaurants"] = len(nearbyResults)
         for i in range(len(nearbyResults)):
             restaurants[str(i+1)] = json.dumps(nearbyResults[i])
+        print("=====below is number restaurants======")
+        print(restaurants)
         redisDB.hmset(event.source.user_id, restaurants)
 
         messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
