@@ -163,7 +163,7 @@ def handle_location_message(event):
     long = event.message.longitude
     # radius = 1500
 
-    nearbyUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={GOOGLE_API_KEY}&location={lat},{long}&type=food＆rankyby=distance&keyword=cp值美食好吃&language=zh-TW"
+    nearbyUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={GOOGLE_API_KEY}&location={lat},{long}&type=food＆rankby=distance&keyword=cp值美食好吃&language=zh-TW"
 
     results = requests.get(nearbyUrl).json()
     nearbyResults = results["results"]
