@@ -163,7 +163,7 @@ def handle_location_message(event):
     long = event.message.longitude
     radius = 1500
 
-    nearbyUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={GOOGLE_API_KEY}&location={lat},{long}&radius={radius}&type=restaurant&language=zh-TW"
+    nearbyUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={GOOGLE_API_KEY}&location={lat},{long}&radius={radius}&type=food&keyword=cp值美食好吃&language=zh-TW"
 
     results = requests.get(nearbyUrl).json()
     nearbyResults = results["results"]
@@ -215,7 +215,7 @@ def generate_restaurant_carousel_message(columnAmount, restaurants):
     
     for i in range(columnAmount):
         if restaurants[i].get("photos") is None:
-            thumbnailImageUrl = None
+            thumbnailImageUrl = "https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE4wpof?ver=d655"
         else:
             photoReference = restaurants[i]["photos"][0]["photo_reference"]
             thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
@@ -244,11 +244,11 @@ def generate_restaurant_carousel_message(columnAmount, restaurants):
 
 def generate_restaurant_button_message(restaurant):
     if restaurant.get("photos") is None:
-        thumbnailImageUrl = None
+        thumbnailImageUrl = "https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE4wpof?ver=d655"
     else:
         photoReference = restaurant["photos"][0]["photo_reference"]
         thumbnailImageUrl = "https://maps.googleapis.com/maps/api/place/photo?key={}&photoreference={}&maxwidth=1024".format(GOOGLE_API_KEY, photoReference)
-        
+    
     rating = "無" if restaurant.get("rating") is None or restaurant["rating"] == 0.0 else restaurant["rating"]
     address = "沒有資料" if restaurant.get("vicinity") is None else restaurant["vicinity"]
     
