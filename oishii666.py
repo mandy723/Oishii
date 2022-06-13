@@ -161,9 +161,9 @@ def handle_text_message(event):
 def handle_location_message(event):
     lat = event.message.latitude
     long = event.message.longitude
-    radius = 1500
+    # radius = 1500
 
-    nearbyUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={GOOGLE_API_KEY}&location={lat},{long}&radius={radius}&type=food&keyword=cp值美食好吃&language=zh-TW"
+    nearbyUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={GOOGLE_API_KEY}&location={lat},{long}&type=food＆rankyby=distance&keyword=cp值美食好吃&language=zh-TW"
 
     results = requests.get(nearbyUrl).json()
     nearbyResults = results["results"]
@@ -183,7 +183,7 @@ def handle_location_message(event):
         for i in nearbyResults:
             if i.get("rating") is None:
                 i["rating"] = 0.0
-        nearbyResults.sort(key = lambda s: s["rating"], reverse=True)
+        # nearbyResults.sort(key = lambda s: s["rating"], reverse=True)
         restaurants = {}
         restaurants["remainingRestaurants"] = len(nearbyResults)
         for i in range(len(nearbyResults)):
