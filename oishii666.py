@@ -172,7 +172,7 @@ def handle_location_message(event):
 
     if nearbyResults:
         for i in range(2):  
-            time.sleep(3)
+            time.sleep(0.5)
             if "next_page_token" not in results:
                 break
         
