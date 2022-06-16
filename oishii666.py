@@ -121,6 +121,8 @@ def handle_text_message(event):
             messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
             messageBuilder.add_button_template(text = "已經沒有更多餐廳了，還是不知道吃什麼嗎？")
             messageBuilder.add_message_template_action(label = "更新當前地址", text = "oishii")
+            messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
+
             message = messageBuilder.build()
 
             lineBotApi.reply_message(
@@ -128,7 +130,7 @@ def handle_text_message(event):
                 message
             )
         
-    elif event.message.text.lower() == "隨便吃":
+    elif event.message.text == "隨便吃":
         if redisDB.exists(event.source.user_id):
             restaurant = json.loads(redisDB.hget(event.source.user_id, str(random.randint(1,10))).decode())
             message = generate_restaurant_button_message(restaurant)
@@ -138,6 +140,8 @@ def handle_text_message(event):
             messageBuilder.add_message_template_action(label = "隨便吃!", text = "隨便吃")
             messageBuilder.add_message_template_action(label = "我要吃十家!", text = "我要吃十家")
             messageBuilder.add_message_template_action(label = "更新當前地址", text = "oishii")
+            messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
+
             optionsMessage = messageBuilder.build()
 
             messageList = [message, optionsMessage]
@@ -157,34 +161,57 @@ def handle_text_message(event):
                 message
             )
 
+    elif event.message.text == "搜尋關鍵字":
+        text = "請依照以下格式輸入關鍵字：/n搜尋「關鍵字」/n例如：搜尋 南港美食"
+         
+        message = messageBuilder.buildTextSendMessage(text)
+
+        lineBotApi.reply_message(
+            event.reply_token,
+            message
+        )    
+
+    elif event.message.text.startsWith("搜尋 "):
+        keywords = event.message.text[3:]
+
+        nearbyResults = getNearbySearch(keywords)
+
+        if nearbyResults:
+            restaurants = {}
+            restaurants["remainingRestaurants"] = len(nearbyResults)
+            for i in range(len(nearbyResults)):
+                restaurants[str(i+1)] = json.dumps(nearbyResults[i])
+            redisDB.hmset(event.source.user_id, restaurants)
+
+            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.add_button_template(text = "想怎麼吃？")
+            messageBuilder.add_message_template_action(label = "隨便吃!", text = "隨便吃")
+            messageBuilder.add_message_template_action(label = "我要吃十家!", text = "我要吃十家")
+            messageBuilder.add_message_template_action(label = "更新當前地址", text = "oishii")
+            messageBuilder.add_message_template_action(label = "搜尋其他關鍵字", text = "搜尋關鍵字")
+
+        else:
+            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.add_button_template(text = "你家住海邊？")
+            messageBuilder.add_message_template_action(label = "換個位置", text = "oishii")
+
+        message = messageBuilder.build()
+
+        lineBotApi.reply_message(
+            event.reply_token,
+            message
+        )        
+                
+
 @handler.add(MessageEvent, message = LocationMessage)
 def handle_location_message(event):
     lat = event.message.latitude
     long = event.message.longitude
-    # radius = 1500
 
-    nearbyUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={GOOGLE_API_KEY}&location={lat},{long}&rankby=distance&type=food&keyword=cp值美食好吃&language=zh-TW"
-    # https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.015391637989616,121.46665713727742&rankby=distance&type=food&keyword=cp值美食好吃&language=zh-TW
-
-    results = requests.get(nearbyUrl).json()
-    nearbyResults = results["results"]
+    nearbyResults = getNearbySearch(lat, long)
     messageBuilder = LineBotMessageBuilder()
 
     if nearbyResults:
-        for i in range(2):  
-            time.sleep(2)
-            if "next_page_token" not in results:
-                break
-        
-            nextPageToken = results['next_page_token'] 
-            nextPageUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={nextPageToken}&key={GOOGLE_API_KEY}&language=zh-TW"
-            results = requests.get(nextPageUrl).json()
-            nearbyResults += results["results"]
-            
-        for i in nearbyResults:
-            if i.get("rating") is None:
-                i["rating"] = 0.0
-        nearbyResults.sort(key = lambda s: s["rating"], reverse=True)
         restaurants = {}
         restaurants["remainingRestaurants"] = len(nearbyResults)
         for i in range(len(nearbyResults)):
@@ -196,6 +223,8 @@ def handle_location_message(event):
         messageBuilder.add_message_template_action(label = "隨便吃!", text = "隨便吃")
         messageBuilder.add_message_template_action(label = "我要吃十家!", text = "我要吃十家")
         messageBuilder.add_message_template_action(label = "更新當前地址", text = "oishii")
+        messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
+
         message = messageBuilder.build()
 
     else:
@@ -284,6 +313,30 @@ def prepareCarousel(userId):
         restaurants.append(json.loads(r[1]))
         
     return (remainingRestaurants, restaurants)
+
+def getNearbySearch(lat = "25.042330551680386", long = "121.57497367188891", keyword = "cp值美食好吃"):
+    nearbyUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?key={GOOGLE_API_KEY}&location={lat},{long}&rankby=distance&type=food&keyword={keyword}&language=zh-TW"
+
+    results = requests.get(nearbyUrl).json()
+    nearbyResults = results["results"]
+
+    if nearbyResults:
+        for i in range(2):  
+            time.sleep(2)
+            if "next_page_token" not in results:
+                break
+        
+            nextPageToken = results['next_page_token'] 
+            nextPageUrl = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={nextPageToken}&key={GOOGLE_API_KEY}&language=zh-TW"
+            results = requests.get(nextPageUrl).json()
+            nearbyResults += results["results"]
+            
+        for i in nearbyResults:
+            if i.get("rating") is None:
+                i["rating"] = 0.0
+        nearbyResults.sort(key = lambda s: s["rating"], reverse=True)
+
+    return nearbyResults
 
 if __name__ == "__main__":
     app.run()

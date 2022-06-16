@@ -5,6 +5,7 @@ from linebot.models import (
     URITemplateAction,
     CarouselTemplate,
     CarouselColumn,
+    TextSendMessage
 )
 
 class LineBotMessageBuilder():
@@ -17,7 +18,7 @@ class LineBotMessageBuilder():
   def start_building_template_message(self, alt_text: str = None):
     self.reset()
     self.message = TemplateSendMessage(
-      alt_text = alt_text,
+      alt_text = alt_text
     )
 
   def add_button_template(self, title: str = None, text: str = None, thumbnail_image_url: str = None):
@@ -67,6 +68,9 @@ class LineBotMessageBuilder():
       self.template.actions = self.actions
     self.message.template = self.template
     return self.message
+
+  def buildTextSendMessage(self, text: str = None):
+    return TextSendMessage(text)
 
   def reset(self):
     self.message = None
