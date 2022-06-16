@@ -15,7 +15,7 @@ class LineBotMessageBuilder():
   carouselColumns = []
   actions = []
 
-  def start_building_template_message(self, alt_text: str = None):
+  def start_building_template_message(self, alt_text: str = "電腦不支援此訊息格式"):
     self.reset()
     self.message = TemplateSendMessage(
       alt_text = alt_text
