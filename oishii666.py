@@ -109,6 +109,9 @@ def handle_text_message(event):
             messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
             messageBuilder.add_button_template(text = "沒有你想吃的嗎？")
             messageBuilder.add_message_template_action(label = "看更多餐廳", text = "看更多餐廳")
+            messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
+            messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
+
             seeMoreRestaurantMessage = messageBuilder.build()
 
             messageList = [restaurantMessage, seeMoreRestaurantMessage]
@@ -120,7 +123,7 @@ def handle_text_message(event):
         else:
             messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
             messageBuilder.add_button_template(text = "已經沒有更多餐廳了，還是不知道吃什麼嗎？")
-            messageBuilder.add_message_template_action(label = "更新當前地址", text = "oishii")
+            messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
             messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
 
             message = messageBuilder.build()
@@ -139,7 +142,7 @@ def handle_text_message(event):
             messageBuilder.add_button_template(text = "還想怎麼吃？")
             messageBuilder.add_message_template_action(label = "隨便吃!", text = "隨便吃")
             messageBuilder.add_message_template_action(label = "我要吃十家!", text = "我要吃十家")
-            messageBuilder.add_message_template_action(label = "更新當前地址", text = "oishii")
+            messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
             messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
 
             optionsMessage = messageBuilder.build()
@@ -187,13 +190,13 @@ def handle_text_message(event):
             messageBuilder.add_button_template(text = "想怎麼吃？")
             messageBuilder.add_message_template_action(label = "隨便吃!", text = "隨便吃")
             messageBuilder.add_message_template_action(label = "我要吃十家!", text = "我要吃十家")
-            messageBuilder.add_message_template_action(label = "更新當前地址", text = "oishii")
+            messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
             messageBuilder.add_message_template_action(label = "搜尋其他關鍵字", text = "搜尋關鍵字")
 
         else:
             messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
             messageBuilder.add_button_template(text = "你家住海邊？")
-            messageBuilder.add_message_template_action(label = "換個位置", text = "oishii")
+            messageBuilder.add_uri_template_action(label = "換個位置", uri = "line://nv/location")
 
         message = messageBuilder.build()
 
@@ -222,7 +225,7 @@ def handle_location_message(event):
         messageBuilder.add_button_template(text = "想怎麼吃？")
         messageBuilder.add_message_template_action(label = "隨便吃!", text = "隨便吃")
         messageBuilder.add_message_template_action(label = "我要吃十家!", text = "我要吃十家")
-        messageBuilder.add_message_template_action(label = "更新當前地址", text = "oishii")
+        messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
         messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
 
         message = messageBuilder.build()
@@ -230,7 +233,7 @@ def handle_location_message(event):
     else:
         messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
         messageBuilder.add_button_template(text = "你家住海邊？")
-        messageBuilder.add_message_template_action(label = "換個位置", text = "oishii")
+        messageBuilder.add_uri_template_action(label = "換個位置", uri = "line://nv/location")
         message = messageBuilder.build()
 
     lineBotApi.reply_message(
