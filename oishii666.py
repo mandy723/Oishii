@@ -76,7 +76,7 @@ def handle_text_message(event):
 
                 restaurantMessage = generate_restaurant_carousel_message(columnAmount, restaurants)
 
-                messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+                messageBuilder.start_building_template_message()
                 messageBuilder.add_button_template(text = "沒有你想吃的嗎？")
                 messageBuilder.add_message_template_action(label = "看更多餐廳", text = "看更多餐廳")
                 messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
@@ -90,7 +90,7 @@ def handle_text_message(event):
                     event.reply_token, messageList
                 )
         else:
-            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.start_building_template_message()
             messageBuilder.add_button_template(text = "你在哪？讓我看看！")
             messageBuilder.add_uri_template_action(label = "傳送地址", uri = "line://nv/location")
             message = messageBuilder.build()
@@ -109,7 +109,7 @@ def handle_text_message(event):
 
             restaurantMessage = generate_restaurant_carousel_message(columnAmount, restaurants)
         
-            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.start_building_template_message()
             messageBuilder.add_button_template(text = "沒有你想吃的嗎？")
             messageBuilder.add_message_template_action(label = "看更多餐廳", text = "看更多餐廳")
             messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
@@ -124,7 +124,7 @@ def handle_text_message(event):
                 messageList
             )
         else:
-            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.start_building_template_message()
             messageBuilder.add_button_template(text = "已經沒有更多餐廳了，還是不知道吃什麼嗎？")
             messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
             messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
@@ -141,7 +141,7 @@ def handle_text_message(event):
             restaurant = json.loads(redisDB.hget(event.source.user_id, str(random.randint(1,10))).decode())
             message = generate_restaurant_button_message(restaurant)
 
-            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.start_building_template_message()
             messageBuilder.add_button_template(text = "還想怎麼吃？")
             messageBuilder.add_message_template_action(label = "隨便吃!", text = "隨便吃")
             messageBuilder.add_message_template_action(label = "我要吃十家!", text = "我要吃十家")
@@ -157,7 +157,7 @@ def handle_text_message(event):
                 messageList
             )
         else:
-            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.start_building_template_message()
             messageBuilder.add_button_template(text = "你在哪？讓我看看！")
             messageBuilder.add_uri_template_action(label = "傳送地址", uri = "line://nv/location")
             message = messageBuilder.build()
@@ -189,7 +189,7 @@ def handle_text_message(event):
                 restaurants[str(i+1)] = json.dumps(nearbyResults[i])
             redisDB.hmset(event.source.user_id, restaurants)
 
-            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.start_building_template_message()
             messageBuilder.add_button_template(text = "想怎麼吃？")
             messageBuilder.add_message_template_action(label = "隨便吃!", text = "隨便吃")
             messageBuilder.add_message_template_action(label = "我要吃十家!", text = "我要吃十家")
@@ -197,7 +197,7 @@ def handle_text_message(event):
             messageBuilder.add_message_template_action(label = "搜尋其他關鍵字", text = "搜尋關鍵字")
 
         else:
-            messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+            messageBuilder.start_building_template_message()
             messageBuilder.add_button_template(text = "你家住海邊？")
             messageBuilder.add_uri_template_action(label = "換個位置", uri = "line://nv/location")
 
@@ -224,7 +224,7 @@ def handle_location_message(event):
             restaurants[str(i+1)] = json.dumps(nearbyResults[i])
         redisDB.hmset(event.source.user_id, restaurants)
 
-        messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+        messageBuilder.start_building_template_message()
         messageBuilder.add_button_template(text = "想怎麼吃？")
         messageBuilder.add_message_template_action(label = "隨便吃!", text = "隨便吃")
         messageBuilder.add_message_template_action(label = "我要吃十家!", text = "我要吃十家")
@@ -234,7 +234,7 @@ def handle_location_message(event):
         message = messageBuilder.build()
 
     else:
-        messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+        messageBuilder.start_building_template_message()
         messageBuilder.add_button_template(text = "你家住海邊？")
         messageBuilder.add_uri_template_action(label = "換個位置", uri = "line://nv/location")
         message = messageBuilder.build()
@@ -246,7 +246,7 @@ def handle_location_message(event):
     
 def generate_restaurant_carousel_message(columnAmount, restaurants):
     messageBuilder = LineBotMessageBuilder()
-    messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
+    messageBuilder.start_building_template_message()
     messageBuilder.start_building_carousel_template()
     
     for i in range(columnAmount):
