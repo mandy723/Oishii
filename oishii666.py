@@ -79,6 +79,9 @@ def handle_text_message(event):
                 messageBuilder.start_building_template_message(alt_text = "用屁電腦rrrrr")
                 messageBuilder.add_button_template(text = "沒有你想吃的嗎？")
                 messageBuilder.add_message_template_action(label = "看更多餐廳", text = "看更多餐廳")
+                messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
+                messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
+
                 seeMoreRestaurantMessage = messageBuilder.build()
             
                 messageList = [restaurantMessage, seeMoreRestaurantMessage]
