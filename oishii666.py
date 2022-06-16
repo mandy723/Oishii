@@ -162,7 +162,7 @@ def handle_text_message(event):
             )
 
     elif event.message.text == "搜尋關鍵字":
-        text = "請依照以下格式輸入關鍵字：/n搜尋「關鍵字」/n例如：搜尋 南港美食"
+        text = "請依照以下格式輸入關鍵字：\n搜尋「關鍵字」\n例如：搜尋 南港美食"
          
         message = messageBuilder.buildTextSendMessage(text)
 
@@ -171,7 +171,7 @@ def handle_text_message(event):
             message
         )    
 
-    elif event.message.text.startsWith("搜尋 "):
+    elif event.message.text.startswith("搜尋 "):
         keywords = event.message.text[3:]
 
         nearbyResults = getNearbySearch(keywords)
