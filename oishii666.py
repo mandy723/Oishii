@@ -172,9 +172,9 @@ def handle_text_message(event):
         )    
 
     elif event.message.text.startswith("搜尋 "):
-        keywords = event.message.text[3:]
+        keyword = event.message.text[3:]
 
-        nearbyResults = getNearbySearch(keywords)
+        nearbyResults = getNearbySearch(keyword = keyword)
 
         if nearbyResults:
             restaurants = {}
