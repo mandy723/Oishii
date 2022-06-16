@@ -56,7 +56,7 @@ def handle_text_message(event):
     
     messageBuilder = LineBotMessageBuilder()
     if event.message.text.lower() == "oishii":
-        messageBuilder.start_building_template_message(alt_text="你在哪ㄦ")
+        messageBuilder.start_building_template_message()
         messageBuilder.add_button_template(text="你在哪ㄦ")
         messageBuilder.add_uri_template_action(label="傳送地址", uri="line://nv/location")
         message = messageBuilder.build()
