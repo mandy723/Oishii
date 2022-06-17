@@ -194,9 +194,9 @@ def handle_text_message(event):
 
     elif event.message.text.startswith("搜尋 "):
         keyword = event.message.text[3:]
+        redisDB.delete(event.source.user_id)
         nearbyResults = getNearbySearch(keyword = keyword)
         messageBuilder.start_building_template_message()
-        redisDB.delete(event.source.user_id)
         
         if nearbyResults:
             restaurants = {}
@@ -327,7 +327,8 @@ def generate_restaurant_button_message(restaurant):
 
 def prepareCarousel(userId):
     restaurantsInfo = { key.decode(): val.decode() for key, val in redisDB.hgetall(userId).items() }
-    remainingRestaurants = int(restaurantsInfo.pop(("remainingRestaurants")))
+    remainingRestaurants = int(restaurantsInfo.pop("remainingRestaurants"))
+    restaurantsInfo.pop("numberOfRestaurants")
     restaurants = []
     
     sortedRestaurants = sorted(restaurantsInfo.items(), key = lambda x: int(x[0]))
