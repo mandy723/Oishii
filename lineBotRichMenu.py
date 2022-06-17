@@ -20,8 +20,12 @@ body = {
     'chatBarText': 'menu',                     # 選單在 LINE 顯示的標題
     'areas':[                                  # 選單內容
         {
-          'bounds': {'x': 0, 'y': 0, 'width': 1250, 'height': 640},           # 選單位置與大小
+          'bounds': {'x': 0, 'y': 0, 'width': 625, 'height': 640},           # 選單位置與大小
           'action': {'type': 'uri', 'uri': 'https://line.me/R/nv/location/'}  # 點擊後開啟地圖定位，傳送位置資訊
+        },
+        {
+          'bounds': {'x': 626, 'y': 0, 'width': 625, 'height': 640},
+          'action': {'type': 'message', 'text': '搜尋關鍵字'} 
         },
         {
           'bounds': {'x': 1251, 'y': 0, 'width':625, 'height': 640},     # 選單位置與大小
@@ -69,7 +73,7 @@ if __name__ == "__main__":
     menu = LineBotRichMenu()
 
     richMenuId = menu.create_rich_menu()
-    # richMenuId = "richmenu-b51f46951ae57021b45e64b8a6f59128"
     menu.set_picture_of_rich_menu(richMenuId)
     menu.activate_rich_menu(richMenuId)
+    # richMenuId = "richmenu-fdceb72059bc1f37e03e49c46b22bd1a"
     # menu.delete_rich_menu(richMenuId)

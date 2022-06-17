@@ -183,7 +183,7 @@ def handle_text_message(event):
             )
 
     elif event.message.text == "搜尋關鍵字":
-        text = "請依照以下格式輸入關鍵字：\n搜尋「關鍵字」\n例如：搜尋 南港美食"
+        text = "請依照以下格式輸入關鍵字：\n搜尋「關鍵字」\n例如：搜尋 北科美食"
          
         message = messageBuilder.buildTextSendMessage(text)
 
