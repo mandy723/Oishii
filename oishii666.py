@@ -57,7 +57,7 @@ def handle_text_message(event):
     messageBuilder = LineBotMessageBuilder()
     if event.message.text.lower() == "oishii":
         messageBuilder.start_building_template_message()
-        messageBuilder.add_button_template(text="你想讓 Oishii 怎麼幫你搜尋餐廳!")
+        messageBuilder.add_button_template(text="想讓 Oishii 怎麼幫你找餐廳?")
         messageBuilder.add_uri_template_action(label="使用地址搜尋", uri="line://nv/location")
         messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
         message = messageBuilder.build()
