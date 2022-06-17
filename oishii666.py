@@ -179,28 +179,27 @@ def handle_text_message(event):
 
     elif event.message.text.startswith("搜尋 "):
         keyword = event.message.text[3:]
-
         nearbyResults = getNearbySearch(keyword = keyword)
-
+        messageBuilder.start_building_template_message()
+        redisDB.delete(event.source.user_id)
+        
         if nearbyResults:
             restaurants = {}
             restaurants["remainingRestaurants"] = len(nearbyResults)
             for i in range(len(nearbyResults)):
                 restaurants[str(i+1)] = json.dumps(nearbyResults[i])
+            
             redisDB.hmset(event.source.user_id, restaurants)
 
-            messageBuilder.start_building_template_message()
             messageBuilder.add_button_template(text = "想怎麼吃？")
             messageBuilder.add_message_template_action(label = "隨便吃!", text = "隨便吃")
             messageBuilder.add_message_template_action(label = "我要吃十家!", text = "我要吃十家")
             messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
             messageBuilder.add_message_template_action(label = "搜尋其他關鍵字", text = "搜尋關鍵字")
-
         else:
-            messageBuilder.start_building_template_message()
             messageBuilder.add_button_template(text = "你家住海邊？")
-            messageBuilder.add_uri_template_action(label = "換個位置", uri = "line://nv/location")
-
+            messageBuilder.add_uri_template_action(label = "換個位置", uri = "line://nv/location")      
+            
         message = messageBuilder.build()
 
         lineBotApi.reply_message(
@@ -208,7 +207,6 @@ def handle_text_message(event):
             message
         )        
                 
-
 @handler.add(MessageEvent, message = LocationMessage)
 def handle_location_message(event):
     lat = event.message.latitude
@@ -216,12 +214,13 @@ def handle_location_message(event):
 
     nearbyResults = getNearbySearch(lat, long)
     messageBuilder = LineBotMessageBuilder()
-
+    redisDB.delete(event.source.user_id)
     if nearbyResults:
         restaurants = {}
         restaurants["remainingRestaurants"] = len(nearbyResults)
         for i in range(len(nearbyResults)):
             restaurants[str(i+1)] = json.dumps(nearbyResults[i])
+
         redisDB.hmset(event.source.user_id, restaurants)
 
         messageBuilder.start_building_template_message()
