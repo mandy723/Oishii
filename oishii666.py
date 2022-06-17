@@ -57,8 +57,9 @@ def handle_text_message(event):
     messageBuilder = LineBotMessageBuilder()
     if event.message.text.lower() == "oishii":
         messageBuilder.start_building_template_message()
-        messageBuilder.add_button_template(text="你在哪ㄦ")
-        messageBuilder.add_uri_template_action(label="傳送地址", uri="line://nv/location")
+        messageBuilder.add_button_template(text="你想讓 Oishii 怎麼幫你搜尋餐廳!")
+        messageBuilder.add_uri_template_action(label="使用地址搜尋", uri="line://nv/location")
+        messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
         message = messageBuilder.build()
 
         lineBotApi.reply_message(
@@ -91,8 +92,9 @@ def handle_text_message(event):
                 )
         else:
             messageBuilder.start_building_template_message()
-            messageBuilder.add_button_template(text = "你在哪？讓我看看！")
-            messageBuilder.add_uri_template_action(label = "傳送地址", uri = "line://nv/location")
+            messageBuilder.add_button_template(text = "Oishii 還不知道你想吃什麼呢!\n快告訴我吧!")
+            messageBuilder.add_uri_template_action(label = "使用地址搜尋", uri = "line://nv/location")
+            messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
             message = messageBuilder.build()
 
             lineBotApi.reply_message(
@@ -101,34 +103,45 @@ def handle_text_message(event):
             )
         
     elif event.message.text == "看更多餐廳":
-        remainingRestaurants, restaurants = prepareCarousel(event.source.user_id)
-        columnAmount = 10 if remainingRestaurants >= 10 else remainingRestaurants
+        if redisDB.exists(event.source.user_id):
+            remainingRestaurants, restaurants = prepareCarousel(event.source.user_id)
+            columnAmount = 10 if remainingRestaurants >= 10 else remainingRestaurants
+            if columnAmount:
+                redisDB.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
 
-        if columnAmount:
-            redisDB.hset(event.source.user_id, "remainingRestaurants", remainingRestaurants - columnAmount)
+                restaurantMessage = generate_restaurant_carousel_message(columnAmount, restaurants)
+            
+                messageBuilder.start_building_template_message()
+                messageBuilder.add_button_template(text = "沒有你想吃的嗎？")
+                messageBuilder.add_message_template_action(label = "看更多餐廳", text = "看更多餐廳")
+                messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
+                messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
 
-            restaurantMessage = generate_restaurant_carousel_message(columnAmount, restaurants)
-        
-            messageBuilder.start_building_template_message()
-            messageBuilder.add_button_template(text = "沒有你想吃的嗎？")
-            messageBuilder.add_message_template_action(label = "看更多餐廳", text = "看更多餐廳")
-            messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
-            messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
+                seeMoreRestaurantMessage = messageBuilder.build()
 
-            seeMoreRestaurantMessage = messageBuilder.build()
+                messageList = [restaurantMessage, seeMoreRestaurantMessage]
 
-            messageList = [restaurantMessage, seeMoreRestaurantMessage]
+                lineBotApi.reply_message(
+                    event.reply_token,
+                    messageList
+                )
+            else:
+                messageBuilder.start_building_template_message()
+                messageBuilder.add_button_template(text = "已經沒有更多餐廳了，還是不知道吃什麼嗎？")
+                messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
+                messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
 
-            lineBotApi.reply_message(
-                event.reply_token,
-                messageList
-            )
+                message = messageBuilder.build()
+
+                lineBotApi.reply_message(
+                    event.reply_token,
+                    message
+                )
         else:
             messageBuilder.start_building_template_message()
-            messageBuilder.add_button_template(text = "已經沒有更多餐廳了，還是不知道吃什麼嗎？")
-            messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
+            messageBuilder.add_button_template(text = "Oishii 還不知道你想吃什麼呢!\n快告訴我吧!")
+            messageBuilder.add_uri_template_action(label = "使用地址搜尋", uri = "line://nv/location")
             messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
-
             message = messageBuilder.build()
 
             lineBotApi.reply_message(
@@ -138,7 +151,8 @@ def handle_text_message(event):
         
     elif event.message.text == "隨便吃":
         if redisDB.exists(event.source.user_id):
-            restaurant = json.loads(redisDB.hget(event.source.user_id, str(random.randint(1,10))).decode())
+            numberOfRestaurants = int(redisDB.hget(event.source.user_id, "numberOfRestaurants"))
+            restaurant = json.loads(redisDB.hget(event.source.user_id, str(random.randint(1,numberOfRestaurants))).decode())
             message = generate_restaurant_button_message(restaurant)
 
             messageBuilder.start_building_template_message()
@@ -158,8 +172,9 @@ def handle_text_message(event):
             )
         else:
             messageBuilder.start_building_template_message()
-            messageBuilder.add_button_template(text = "你在哪？讓我看看！")
-            messageBuilder.add_uri_template_action(label = "傳送地址", uri = "line://nv/location")
+            messageBuilder.add_button_template(text = "Oishii 還不知道你想吃什麼呢!\n快告訴我吧!")
+            messageBuilder.add_uri_template_action(label = "使用地址搜尋", uri = "line://nv/location")
+            messageBuilder.add_message_template_action(label = "使用關鍵字搜尋", text = "搜尋關鍵字")
             message = messageBuilder.build()
 
             lineBotApi.reply_message(
@@ -186,6 +201,7 @@ def handle_text_message(event):
         if nearbyResults:
             restaurants = {}
             restaurants["remainingRestaurants"] = len(nearbyResults)
+            restaurants["numberOfRestaurants"] = len(nearbyResults)
             for i in range(len(nearbyResults)):
                 restaurants[str(i+1)] = json.dumps(nearbyResults[i])
             
@@ -212,12 +228,14 @@ def handle_location_message(event):
     lat = event.message.latitude
     long = event.message.longitude
 
+    redisDB.delete(event.source.user_id)
     nearbyResults = getNearbySearch(lat, long)
     messageBuilder = LineBotMessageBuilder()
-    redisDB.delete(event.source.user_id)
+    
     if nearbyResults:
         restaurants = {}
         restaurants["remainingRestaurants"] = len(nearbyResults)
+        restaurants["numberOfRestaurants"] = len(nearbyResults)
         for i in range(len(nearbyResults)):
             restaurants[str(i+1)] = json.dumps(nearbyResults[i])
 
