@@ -15,21 +15,19 @@ import requests
 import time
 
 app = Flask(__name__)
-
-redisDB = redis.Redis(
-    host='redis-18784.c299.asia-northeast1-1.gce.cloud.redislabs.com',
-    port=18784, 
-    password='YekHABXgrRh7pJdr1OvKbfXTyDtcphjD'
-    )
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-GOOGLE_API_KEY = "AIzaSyABoNMQEdhfPSZexPLgkglXjXz6nRrqDxU"
-
 
 # LINE 聊天機器人的基本資料
 config = configparser.ConfigParser()
 config.read(os.path.join(BASE_DIR, 'config.ini'))
 
+redisDB = redis.Redis(
+    host = config.get('redisDB', 'host'),
+    port = int(config.get('redisDB', 'port')), 
+    password = config.get('redisDB', 'password')
+)
+
+GOOGLE_API_KEY = config.get('google', 'google_api_key')
 lineBotApi = LineBotApi(config.get('line-bot', 'channel_access_token'))
 handler = WebhookHandler(config.get('line-bot', 'channel_secret'))
 
