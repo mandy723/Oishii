@@ -211,8 +211,8 @@ def handle_text_message(event):
             messageBuilder.add_uri_template_action(label = "更新當前地址", uri = "line://nv/location")
             messageBuilder.add_message_template_action(label = "搜尋其他關鍵字", text = "搜尋關鍵字")
         else:
-            messageBuilder.add_button_template(text = "你家住海邊？")
-            messageBuilder.add_uri_template_action(label = "換個位置", uri = "line://nv/location")      
+            messageBuilder.add_button_template(text = "無相關之搜尋結果")
+            messageBuilder.add_message_template_action(label = "換個關鍵字試試？", text = "搜尋關鍵字")   
             
         message = messageBuilder.build()
 
